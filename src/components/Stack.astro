@@ -1,0 +1,111 @@
+---
+import { languages, stack } from "@/data/profile";
+import { useT, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { t, tr } = useT(lang);
+---
+
+<section class="section" id="stack" aria-labelledby="stack-title">
+  <h2 id="stack-title" class="section-title">{t("stackTitle")}</h2>
+
+  <dl class="groups">
+    {
+      stack.map((g) => (
+        <div class="group">
+          <dt class="label">{tr(g.group)}</dt>
+          <dd>
+            <ul class="chips" role="list">
+              {g.items.map((item) => (
+                <li class="chip">{item}</li>
+              ))}
+            </ul>
+          </dd>
+        </div>
+      ))
+    }
+    <div class="group">
+      <dt class="label">{t("languagesTitle")}</dt>
+      <dd>
+        <ul class="langs" role="list">
+          {
+            languages.map((l) => (
+              <li>
+                {tr(l.name)} <span class="mono level">{tr(l.level)}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </dd>
+    </div>
+  </dl>
+</section>
+
+<style>
+  .groups {
+    display: grid;
+    gap: 1.1rem;
+  }
+
+  .group {
+    display: grid;
+    grid-template-columns: 9.5rem 1fr;
+    align-items: baseline;
+    gap: 0.5rem 1.5rem;
+  }
+
+  .label {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+
+  dd {
+    margin: 0;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .chip {
+    padding: 0.2rem 0.65rem;
+    border: 1px solid var(--line);
+    border-radius: 0.4rem;
+    background: var(--surface);
+    font-size: var(--step--1);
+    line-height: 1.5;
+    transition: border-color 0.2s var(--ease-out);
+  }
+
+  .chip:hover {
+    border-color: var(--ink-3);
+  }
+
+  .langs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.5rem;
+    padding: 0;
+    list-style: none;
+    font-size: var(--step--1);
+  }
+
+  .level {
+    color: var(--ink-3);
+    margin-left: 0.25rem;
+  }
+
+  @media (max-width: 36rem) {
+    .group {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

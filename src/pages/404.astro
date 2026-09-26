@@ -1,0 +1,55 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import { profile } from "@/data/profile";
+import { useT } from "@/i18n/ui";
+
+// Página única y bilingüe: Cloudflare la sirve para cualquier ruta inexistente.
+const es = useT("es").t;
+const en = useT("en").t;
+---
+
+<Layout lang="es" title={`404 · ${profile.name}`} noindex>
+  <Header lang="es" />
+  <main id="main" class="wrap notfound">
+    <p class="code mono rise">404</p>
+    <h1 class="rise" style="--i:1">{es("notFoundTitle")}</h1>
+    <p class="muted rise" style="--i:2">
+      {es("notFoundText")} <span lang="en">{en("notFoundText")}</span>
+    </p>
+    <p class="rise" style="--i:3">
+      <a class="link" href="/">{es("backHome")}</a>
+      <span class="sep" aria-hidden="true">·</span>
+      <a class="link" href="/en/" lang="en">{en("backHome")}</a>
+    </p>
+  </main>
+</Layout>
+
+<style>
+  .notfound {
+    display: grid;
+    gap: 1rem;
+    padding-top: clamp(4rem, 10vw, 8rem);
+    padding-bottom: 6rem;
+  }
+
+  .code {
+    color: var(--accent);
+    font-size: var(--step-1);
+  }
+
+  h1 {
+    font-size: var(--step-3);
+    letter-spacing: -0.025em;
+  }
+
+  span[lang="en"] {
+    display: block;
+    color: var(--ink-3);
+  }
+
+  .sep {
+    margin-inline: 0.6rem;
+    color: var(--ink-3);
+  }
+</style>

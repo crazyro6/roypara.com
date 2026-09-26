@@ -1,0 +1,192 @@
+---
+import { profile } from "@/data/profile";
+import { getContributions } from "@/lib/github";
+import { htmlLang, useT, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { t } = useT(lang);
+const data = await getContributions(profile.githubUser);
+
+const CELL = 10;
+const STEP = 12;
+const LEFT = 22;
+const TOP = 18;
+
+let cells: { x: number; y: number; level: number; title: string }[] = [];
+let months: { x: number; label: string }[] = [];
+let dayLabels: { y: number; label: string }[] = [];
+let width = 0;
+let height = 0;
+
+if (data) {
+  const locale = htmlLang[lang];
+  const dayFmt = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone: "UTC" });
+  const monthFmt = new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" });
+  const weekdayFmt = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" });
+
+  // Semanas de lunes a domingo.
+  const first = new Date(`${data.days[0].date}T00:00:00Z`);
+  const offset = (first.getUTCDay() + 6) % 7;
+  const cols = Math.ceil((offset + data.days.length) / 7);
+
+  width = LEFT + cols * STEP;
+  height = TOP + 7 * STEP;
+
+  let lastMonthCol = -10;
+  cells = data.days.map((d, i) => {
+    const idx = offset + i;
+    const col = Math.floor(idx / 7);
+    const row = idx % 7;
+    const date = new Date(`${d.date}T00:00:00Z`);
+    if (date.getUTCDate() <= 7 && row === 0 && col - lastMonthCol >= 3) {
+      months.push({ x: LEFT + col * STEP, label: monthFmt.format(date).replace(".", "") });
+      lastMonthCol = col;
+    }
+    return {
+      x: LEFT + col * STEP,
+      y: TOP + row * STEP,
+      level: d.level,
+      title: t("contributionDay", { n: d.count, date: dayFmt.format(date) }),
+    };
+  });
+
+  // Etiquetas para lunes, miércoles y viernes (1 de enero de 2024 fue lunes).
+  dayLabels = [0, 2, 4].map((row) => ({
+    y: TOP + row * STEP + CELL - 1,
+    label: weekdayFmt.format(new Date(Date.UTC(2024, 0, 1 + row))).replace(".", ""),
+  }));
+}
+---
+
+{
+  data && (
+    <section class="section" id="actividad" aria-labelledby="activity-title">
+      <h2 id="activity-title" class="section-title">
+        {t("activityTitle")}
+      </h2>
+
+      <div class="scroller" tabindex="0" aria-label={t("activityTitle")}>
+        <svg
+          class="calendar"
+          width={width}
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          role="img"
+          aria-label={t("contributions", { n: data.total })}
+        >
+          {months.map((m) => (
+            <text class="axis" x={m.x} y={10}>
+              {m.label}
+            </text>
+          ))}
+          {dayLabels.map((d) => (
+            <text class="axis" x={0} y={d.y}>
+              {d.label}
+            </text>
+          ))}
+          {cells.map((c) => (
+            <rect class={`l${c.level}`} x={c.x} y={c.y} width={CELL} height={CELL} rx={2}>
+              <title>{c.title}</title>
+            </rect>
+          ))}
+        </svg>
+      </div>
+
+      <div class="caption">
+        <p class="muted">
+          <a class="link" href={profile.links.github} target="_blank" rel="noopener">
+            {t("contributions", { n: data.total })}
+          </a>
+        </p>
+        <p class="legend mono" aria-hidden="true">
+          {t("less")}
+          {[0, 1, 2, 3, 4].map((l) => (
+            <svg width={CELL} height={CELL}>
+              <rect class={`l${l}`} width={CELL} height={CELL} rx={2} />
+            </svg>
+          ))}
+          {t("more")}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  /* rtl hace que en pantallas estrechas se vea primero lo más reciente. */
+  .scroller {
+    direction: rtl;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: thin;
+  }
+
+  .calendar {
+    direction: ltr;
+    max-width: none;
+    margin-right: auto;
+  }
+
+  .axis {
+    direction: ltr;
+    text-anchor: start;
+    fill: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: 9px;
+  }
+
+  rect {
+    stroke: color-mix(in oklch, var(--ink) 6%, transparent);
+    stroke-width: 1;
+    transition: opacity 0.2s var(--ease-out);
+  }
+
+  .l0 {
+    fill: var(--surface);
+  }
+  .l1 {
+    fill: color-mix(in oklch, var(--accent-soft) 40%, var(--surface));
+  }
+  .l2 {
+    fill: color-mix(in oklch, var(--accent-soft) 70%, var(--surface));
+  }
+  .l3 {
+    fill: var(--accent-soft);
+  }
+  .l4 {
+    fill: var(--accent);
+  }
+
+  .calendar rect:hover {
+    opacity: 0.6;
+  }
+
+  .caption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin-top: 0.75rem;
+    font-size: var(--step--1);
+  }
+
+  .legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--ink-3);
+  }
+
+  .legend svg:first-of-type {
+    margin-left: 0.25rem;
+  }
+
+  .legend svg:last-of-type {
+    margin-right: 0.25rem;
+  }
+</style>

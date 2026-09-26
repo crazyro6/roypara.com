@@ -1,0 +1,25 @@
+name: Rebuild semanal
+
+# Vuelve a desplegar la web cada lunes para refrescar el calendario de GitHub.
+# Necesita el secret CLOUDFLARE_DEPLOY_HOOK (URL del deploy hook de Cloudflare).
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar al deploy hook
+        env:
+          HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "CLOUDFLARE_DEPLOY_HOOK no configurado; nada que hacer."
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK"

@@ -1,0 +1,244 @@
+---
+import { Image } from "astro:assets";
+import photo from "@/assets/roy.png";
+import { profile } from "@/data/profile";
+import { htmlLang, useT, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { t, tr } = useT(lang);
+
+const links = [
+  { label: "GitHub", href: profile.links.github },
+  { label: "LinkedIn", href: profile.links.linkedin },
+];
+---
+
+<section class="hero" aria-labelledby="hero-name">
+  <div class="top rise" style="--i:0">
+    <Image
+      class="photo"
+      src={photo}
+      alt={t("photoAlt")}
+      width={96}
+      height={96}
+      densities={[1, 2]}
+      loading="eager"
+      fetchpriority="high"
+    />
+    {
+      profile.status && (
+        <p class="status">
+          <span class="dot" aria-hidden="true" />
+          {tr(profile.status)}
+        </p>
+      )
+    }
+  </div>
+
+  <h1 id="hero-name" class="name rise" style="--i:1">{profile.name}</h1>
+  <p class="role rise" style="--i:2">{tr(profile.role)}</p>
+
+  <div class="bio rise" style="--i:3">
+    {profile.bio.map((p) => <p>{tr(p)}</p>)}
+  </div>
+
+  <p class="meta mono rise" style="--i:4">
+    <span>{profile.location}</span>
+    <span class="coords" aria-hidden="true">{profile.coordinates}</span>
+    <span class="clock">
+      <time data-clock data-tz={profile.timeZone} data-locale={htmlLang[lang]}>--:--</time>
+      {t("localTime")}
+    </span>
+  </p>
+
+  <ul class="links rise" style="--i:5" role="list">
+    {
+      links.map((l) => (
+        <li>
+          <a class="link" href={l.href} target="_blank" rel="me noopener">
+            {l.label}
+            <span class="arrow" aria-hidden="true">
+              ↗
+            </span>
+          </a>
+        </li>
+      ))
+    }
+    <li>
+      <a class="link" href={`mailto:${profile.email}`}>Email</a>
+    </li>
+    {
+      profile.cv && (
+        <li>
+          <a class="cv" href={profile.cv} target="_blank" rel="noopener">
+            {t("downloadCv")}
+            <span class="mono">{t("cvLangNote")}</span>
+          </a>
+        </li>
+      )
+    }
+  </ul>
+</section>
+
+<script>
+  const els = document.querySelectorAll<HTMLTimeElement>("[data-clock]");
+  const tick = () =>
+    els.forEach((el) => {
+      const fmt = new Intl.DateTimeFormat(el.dataset.locale, {
+        timeZone: el.dataset.tz,
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      });
+      el.textContent = fmt.format(new Date());
+    });
+  tick();
+  setInterval(tick, 15_000);
+</script>
+
+<style>
+  .hero {
+    padding-top: clamp(2.5rem, 2rem + 4vw, 5rem);
+  }
+
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.25rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .photo {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 999px;
+    object-fit: cover;
+    background: var(--surface);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.3rem 0.8rem 0.3rem 0.65rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.4;
+  }
+
+  .dot {
+    position: relative;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--live);
+    flex: none;
+  }
+
+  .dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--live);
+    animation: ping 2.6s var(--ease-out) infinite;
+  }
+
+  @keyframes ping {
+    0% {
+      transform: scale(1);
+      opacity: 0.55;
+    }
+    70%,
+    100% {
+      transform: scale(2.6);
+      opacity: 0;
+    }
+  }
+
+  .name {
+    font-size: var(--step-3);
+    letter-spacing: -0.025em;
+  }
+
+  .role {
+    margin-top: 0.35rem;
+    color: var(--ink-2);
+    font-size: var(--step-1);
+  }
+
+  .bio {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.75rem;
+    max-width: 62ch;
+    color: var(--ink-2);
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 1.1rem;
+    margin-top: 1.75rem;
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+
+  .clock time {
+    color: var(--ink);
+    display: inline-block;
+    min-width: 5ch;
+    margin-right: 0.5ch;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    margin-top: 1.5rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cv {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.45rem 0.95rem;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--bg);
+    font-weight: 600;
+    font-size: var(--step--1);
+    text-decoration: none;
+    transition:
+      transform 0.3s var(--ease-out),
+      background-color 0.2s var(--ease-out);
+  }
+
+  .cv .mono {
+    opacity: 0.65;
+    font-weight: 400;
+  }
+
+  .cv:hover {
+    background: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 30rem) {
+    .coords {
+      display: none;
+    }
+  }
+</style>

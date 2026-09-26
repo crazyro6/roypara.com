@@ -1,0 +1,114 @@
+---
+import { profile } from "@/data/profile";
+import { useT, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { t } = useT(lang);
+---
+
+<section class="section" id="contacto" aria-labelledby="contact-title">
+  <h2 id="contact-title" class="section-title">{t("contactTitle")}</h2>
+  <p class="text muted">{t("contactText")}</p>
+
+  <div class="email">
+    <a class="address mono" href={`mailto:${profile.email}`}>{profile.email}</a>
+    <button
+      class="copy"
+      type="button"
+      data-copy={profile.email}
+      data-done={t("copied")}
+      aria-label={t("copyEmail")}
+    >
+      <span data-copy-label>{t("copy")}</span>
+    </button>
+    <span class="sr-only" role="status" data-copy-status></span>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
+    const label = button.querySelector<HTMLElement>("[data-copy-label]")!;
+    const status = button.parentElement?.querySelector<HTMLElement>("[data-copy-status]");
+    const original = label.textContent;
+    let timer: number | undefined;
+
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy ?? "");
+      } catch {
+        return;
+      }
+      label.textContent = button.dataset.done ?? "";
+      button.dataset.state = "done";
+      if (status) status.textContent = button.dataset.done ?? "";
+      clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        label.textContent = original;
+        delete button.dataset.state;
+        if (status) status.textContent = "";
+      }, 2000);
+    });
+  });
+</script>
+
+<style>
+  .text {
+    max-width: 52ch;
+  }
+
+  .email {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .address {
+    color: var(--ink);
+    font-size: var(--step-1);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklch, var(--accent) 55%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+    transition:
+      color 0.25s var(--ease-out),
+      text-decoration-color 0.25s var(--ease-out);
+    overflow-wrap: anywhere;
+  }
+
+  .address:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
+
+  .copy {
+    min-width: 5.5rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    cursor: pointer;
+    transition:
+      color 0.2s var(--ease-out),
+      border-color 0.2s var(--ease-out),
+      background-color 0.2s var(--ease-out);
+  }
+
+  .copy:hover {
+    color: var(--ink);
+    border-color: var(--ink-3);
+    background: var(--surface);
+  }
+
+  .copy[data-state="done"] {
+    color: var(--ink);
+    border-color: var(--live);
+  }
+</style>

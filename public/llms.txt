@@ -1,0 +1,24 @@
+# Roy Para Olivera
+
+> Full-stack developer in training based in Vecindario, Gran Canaria (Spain). Studying a Higher VET Diploma in Multiplatform Application Development (DAM) at IES Lomo de la Herradura, 2025 – present. Open to internships and junior roles.
+
+- Experience: developer intern at Fraemma Autorep (Telde), May – June 2026, 147-hour work placement within the DAM programme.
+- Main languages: Java, JavaScript, SQL. Also Python, PHP, React, Vite, Bootstrap, Node.js, Laravel, PostgreSQL, MySQL, MongoDB, Git.
+- Spoken languages: Spanish (native), English (C1, Cambridge), German (B1, Goethe-Institut).
+- Contact: roypara@icloud.com
+
+## Pages
+
+- [Portfolio (Spanish)](https://roypara.com/)
+- [Portfolio (English)](https://roypara.com/en/)
+- [CV (PDF, Spanish)](https://roypara.com/cv-roy-para.pdf)
+
+## Projects
+
+- [Rocket League Live Dashboard](https://github.com/crazyro6/Rocket-League-Live-Dashboard): real-time dashboard for Rocket League's local Stats API (React, Vite, Node.js, PWA).
+- [ADS-B radar front end](https://github.com/crazyro6/Fronted-Feeder-FR24): React interface for a home-built ADS-B receiver (Raspberry Pi + RTL-SDR, dump1090), enriched with HexDB and Planespotters.
+
+## Elsewhere
+
+- [GitHub](https://github.com/crazyro6)
+- [LinkedIn](https://www.linkedin.com/in/roy-para-olivera-a6b42b386/)

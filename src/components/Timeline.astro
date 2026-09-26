@@ -1,0 +1,88 @@
+---
+import type { TimelineItem } from "@/data/profile";
+import { useT, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+  id: string;
+  title: string;
+  items: TimelineItem[];
+}
+
+const { lang, id, title, items } = Astro.props;
+const { tr } = useT(lang);
+---
+
+{
+  items.length > 0 && (
+    <section class="section" id={id} aria-labelledby={`${id}-title`}>
+      <h2 id={`${id}-title`} class="section-title">
+        {title}
+      </h2>
+
+      <ol class="timeline" role="list">
+        {items.map((e) => (
+          <li class="item">
+            <p class="period mono">{tr(e.period)}</p>
+            <div>
+              <h3 class="title">{tr(e.title)}</h3>
+              <p class="place">
+                {e.placeUrl ? (
+                  <a class="link" href={e.placeUrl} target="_blank" rel="noopener">
+                    {e.place}
+                  </a>
+                ) : (
+                  e.place
+                )}
+              </p>
+              <p class="note">{tr(e.note)}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
+<style>
+  .timeline {
+    display: grid;
+    gap: 1.75rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .item {
+    display: grid;
+    grid-template-columns: 9.5rem 1fr;
+    gap: 0.25rem 1.5rem;
+  }
+
+  .period {
+    padding-top: 0.15em;
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+
+  .title {
+    font-size: var(--step-0);
+    font-weight: 650;
+  }
+
+  .place {
+    color: var(--ink-2);
+  }
+
+  .note {
+    margin-top: 0.35rem;
+    max-width: 60ch;
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+
+  @media (max-width: 36rem) {
+    .item {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

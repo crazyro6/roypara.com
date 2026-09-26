@@ -1,0 +1,178 @@
+---
+import { profile, projects } from "@/data/profile";
+import { useT, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { t, tr } = useT(lang);
+---
+
+<section class="section" id="proyectos" aria-labelledby="projects-title">
+  <h2 id="projects-title" class="section-title">{t("projectsTitle")}</h2>
+  <p class="intro muted">{t("projectsIntro")}</p>
+
+  <ul class="list" role="list">
+    {
+      projects.map((p) => {
+        const main = p.demo ?? p.repo;
+        return (
+          <li class="project">
+            <div class="head">
+              <h3 class="name">
+                {main ? (
+                  <a class="stretched" href={main} target="_blank" rel="noopener">
+                    {p.name}
+                  </a>
+                ) : (
+                  p.name
+                )}
+              </h3>
+              <span class="year mono">{p.year}</span>
+            </div>
+            <p class="desc">{tr(p.description)}</p>
+            <div class="foot">
+              <p class="stack mono">
+                <span class="sr-only">Stack: </span>
+                {p.stack.join(" · ")}
+              </p>
+              <p class="actions">
+                {p.repo && (
+                  <a class="link" href={p.repo} target="_blank" rel="noopener">
+                    {t("code")}
+                    <span class="arrow" aria-hidden="true">
+                      ↗
+                    </span>
+                  </a>
+                )}
+                {p.demo && (
+                  <a class="link" href={p.demo} target="_blank" rel="noopener">
+                    {t("demo")}
+                    <span class="arrow" aria-hidden="true">
+                      ↗
+                    </span>
+                  </a>
+                )}
+              </p>
+            </div>
+          </li>
+        );
+      })
+    }
+  </ul>
+
+  <a class="more link" href={profile.links.github} target="_blank" rel="noopener">
+    {t("moreOnGithub")}
+    <span class="arrow" aria-hidden="true">↗</span>
+  </a>
+</section>
+
+<style>
+  .intro {
+    margin-top: -0.75rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .list {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0;
+    margin-inline: -1rem;
+    list-style: none;
+  }
+
+  .project {
+    position: relative;
+    padding: 1.1rem 1rem 1.2rem;
+    border-radius: 0.75rem;
+    transition: background-color 0.3s var(--ease-out);
+  }
+
+  .project:hover {
+    background: var(--surface);
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .name {
+    font-size: var(--step-0);
+    font-weight: 650;
+  }
+
+  .stretched {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Toda la fila es clicable, sin anidar enlaces. */
+  .stretched::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .stretched:focus-visible {
+    outline: none;
+  }
+
+  .stretched:focus-visible::after {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .project:hover .stretched {
+    color: var(--accent);
+  }
+
+  .year {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+    flex: none;
+  }
+
+  .desc {
+    margin-top: 0.4rem;
+    color: var(--ink-2);
+    max-width: 62ch;
+  }
+
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    margin-top: 0.85rem;
+    font-size: var(--step--1);
+  }
+
+  .stack {
+    color: var(--ink-3);
+  }
+
+  .actions {
+    display: flex;
+    gap: 1.25rem;
+  }
+
+  /* Los enlaces secundarios quedan por encima del enlace de la fila. */
+  .actions a {
+    position: relative;
+    z-index: 1;
+  }
+
+  .more {
+    display: inline-block;
+    margin-top: 1.25rem;
+    font-size: var(--step--1);
+    color: var(--ink-2);
+  }
+</style>
