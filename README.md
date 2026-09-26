@@ -34,10 +34,10 @@ El calendario de contribuciones de GitHub está desactivado por ahora. Para most
 
 ## Despliegue
 
-Cloudflare, conectado a este repositorio: cada push a `main` se publica automáticamente.
+Cloudflare Workers (archivos estáticos, ver `wrangler.jsonc`) conectado a este repositorio con Workers Builds: cada push a `main` se publica solo.
 
 - Comando de build: `pnpm run build`
-- Directorio de salida: `dist`
+- Comando de deploy: `npx wrangler deploy`
 
 ## Licencia
 
