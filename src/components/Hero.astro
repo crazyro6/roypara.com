@@ -86,14 +86,16 @@ const links = [
     </li>
     {
       cvs.length > 0 && (
-        <li class="cv" role="group" aria-label={t("cvGroup")}>
-          {cvs.map((cv) => (
-            <a href={cv.href} target="_blank" rel="noopener">
-              {cv.sr && <span class="sr-only">{cv.sr}</span>}
-              {cv.label}
-              {cv.note && <span class="note mono">{cv.note}</span>}
-            </a>
-          ))}
+        <li>
+          <div class="cv" role="group" aria-label={t("cvGroup")}>
+            {cvs.map((cv) => (
+              <a href={cv.href} target="_blank" rel="noopener">
+                {cv.sr && <span class="sr-only">{cv.sr}</span>}
+                {cv.label}
+                {cv.note && <span class="note mono">{cv.note}</span>}
+              </a>
+            ))}
+          </div>
         </li>
       )
     }
