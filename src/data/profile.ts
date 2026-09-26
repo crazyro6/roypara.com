@@ -45,7 +45,7 @@ export const profile = {
   // Calendario de contribuciones de GitHub. Cambia a true para mostrarlo.
   showGithubCalendar: false,
   // Enlace al código de esta web en el footer; null lo oculta.
-  sourceRepo: null as string | null,
+  sourceRepo: "https://github.com/crazyro6/roypara.com" as string | null,
 };
 
 export type Project = {
