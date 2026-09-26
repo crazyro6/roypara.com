@@ -19,7 +19,7 @@ const { lang } = Astro.props;
 const { t } = useT(lang);
 ---
 
-<Layout lang={lang}>
+<Layout lang={lang} autoLang={lang === "es"}>
   <Header lang={lang} />
   <main id="main" class="wrap">
     <Hero lang={lang} />
@@ -32,3 +32,16 @@ const { t } = useT(lang);
   </main>
   <Footer lang={lang} />
 </Layout>
+
+<script>
+  // Posición del cursor dentro de cada tarjeta para el brillo del hover.
+  if (matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    document.querySelectorAll<HTMLElement>(".section").forEach((el) => {
+      el.addEventListener("pointermove", (e) => {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+        el.style.setProperty("--my", `${e.clientY - r.top}px`);
+      });
+    });
+  }
+</script>

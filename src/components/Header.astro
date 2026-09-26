@@ -19,12 +19,23 @@ const other: Lang = lang === "es" ? "en" : "es";
   </a>
 
   <nav class="actions">
-    <a class="lang mono" href={pathFor(other)} hreflang={other} lang={other}>
+    <a class="lang mono" href={pathFor(other)} hreflang={other} lang={other} data-lang={other}>
       <span class="sr-only">{t("switchLang")}: </span>{other.toUpperCase()}
     </a>
     <ThemeToggle lang={lang} />
   </nav>
 </header>
+
+<script>
+  // Recordar el idioma elegido a mano para no redirigir nunca en contra.
+  document.querySelectorAll<HTMLAnchorElement>("[data-lang]").forEach((a) =>
+    a.addEventListener("click", () => {
+      try {
+        localStorage.setItem("lang", a.dataset.lang!);
+      } catch {}
+    }),
+  );
+</script>
 
 <style>
   .header {

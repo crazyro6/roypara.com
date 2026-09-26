@@ -11,9 +11,11 @@ interface Props {
   lang: Lang;
   title?: string;
   noindex?: boolean;
+  /** Redirige a /en/ si el navegador no tiene el español entre sus idiomas. */
+  autoLang?: boolean;
 }
 
-const { lang, title, noindex = false } = Astro.props;
+const { lang, title, noindex = false, autoLang = false } = Astro.props;
 const { t, tr } = useT(lang);
 
 const pageTitle = title ?? `${profile.name} · ${tr(profile.role)}`;
@@ -21,6 +23,21 @@ const description = t("metaDescription");
 const site = Astro.site!;
 const canonical = new URL(pathFor(lang), site).href;
 const ogImage = new URL("/og.png", site).href;
+
+// Primera visita a la portada en español desde un navegador que no tiene el
+// español entre sus idiomas: se pasa a la versión inglesa. Si la persona
+// elige idioma con el selector (se guarda en localStorage), se respeta siempre.
+const autoLangScript = `(() => {
+  try {
+    if (/bot|crawl|spider|slurp|lighthouse|headless/i.test(navigator.userAgent)) return;
+    const saved = localStorage.getItem("lang");
+    if (saved === "es") return;
+    const prefs = navigator.languages?.length ? navigator.languages : [navigator.language];
+    if (saved === "en" || !prefs.some((l) => /^es(-|$)/i.test(l))) {
+      location.replace("/en/" + location.search + location.hash);
+    }
+  } catch {}
+})();`;
 
 const person = {
   "@context": "https://schema.org",
@@ -63,8 +80,8 @@ const person = {
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#111519" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f2f5f8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b0e11" media="(prefers-color-scheme: dark)" />
 
     <link rel="preload" href={sansUrl} as="font" type="font/woff2" crossorigin />
 
@@ -93,6 +110,7 @@ const person = {
         document.documentElement.dataset.theme = theme;
       })();
     </script>
+    {autoLang && <script is:inline set:html={autoLangScript} />}
   </head>
   <body>
     <a class="skip" href="#main">{t("skip")}</a>

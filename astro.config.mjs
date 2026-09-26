@@ -17,7 +17,4 @@ export default defineConfig({
     }),
   ],
   build: { inlineStylesheets: "always" },
-  vite: {
-    resolve: { alias: { "@": "/src" } },
-  },
 });

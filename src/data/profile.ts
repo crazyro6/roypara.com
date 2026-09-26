@@ -30,7 +30,13 @@ export const profile = {
     },
   ] satisfies T[],
   email: "roypara@icloud.com",
-  cv: "/cv-roy-para.pdf",
+  cv: {
+    // CV normal, en español.
+    standard: "/cv-roy-para.pdf",
+    // CV Europass, en inglés. Basta con dejar el PDF en public/ con este
+    // nombre: el botón se divide en dos automáticamente al hacer el build.
+    europass: "/cv-roy-para-europass.pdf",
+  },
   links: {
     github: "https://github.com/crazyro6",
     linkedin: "https://www.linkedin.com/in/roy-para-olivera-a6b42b386/",

@@ -26,6 +26,10 @@ pnpm preview   # sirve dist/
 | Foto | `src/assets/roy.png` |
 | CV, favicon, imagen para redes | `public/` |
 
+**CV Europass:** guarda el PDF como `public/cv-roy-para-europass.pdf`. Al hacer el build, el botón de CV se divide solo en dos (CV normal en español + Europass en inglés). Si quitas el archivo, vuelve a ser un único botón.
+
+**Idioma automático:** quien entra en `/` con un navegador que no tiene el español entre sus idiomas pasa directamente a `/en/`. Si elige idioma con el selector, se recuerda y no se le vuelve a redirigir.
+
 El calendario de contribuciones de GitHub está desactivado por ahora. Para mostrarlo, pon `showGithubCalendar: true` en `src/data/profile.ts`: se genera al hacer el build, y un workflow semanal (`.github/workflows/rebuild.yml`) vuelve a desplegar la web para mantenerlo al día.
 
 ## Despliegue
