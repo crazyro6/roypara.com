@@ -18,7 +18,7 @@ const inPublic = (file: string) => existsSync(join(process.cwd(), "public", file
 const cvs = [
   // Con un solo PDF el botón es entero y lleva la nota corta ("PDF").
   { href: profile.cv.standard, label: t("downloadCv"), note: t("cvStandardNote"), solo: t("cvLangNote") },
-  { href: profile.cv.europass, label: "Europass", note: t("cvEuropassNote"), sr: "CV " },
+  { href: tr(profile.cv.europass), label: "Europass", note: t("cvEuropassNote"), sr: "CV " },
 ].filter((cv) => inPublic(cv.href));
 if (cvs.length === 1 && cvs[0].solo) cvs[0].note = cvs[0].solo;
 

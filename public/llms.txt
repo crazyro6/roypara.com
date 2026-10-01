@@ -2,8 +2,8 @@
 
 > Full-stack developer in training based in Vecindario, Gran Canaria (Spain). Studying a Higher VET Diploma in Multiplatform Application Development (DAM) at IES Lomo de la Herradura, 2025 – present. Open to internships and junior roles.
 
-- Experience: developer intern at Fraemma Autorep (Telde), May – June 2026, 147-hour work placement within the DAM programme.
-- Main languages: Java, JavaScript, SQL. Also Python, PHP, React, Vite, Bootstrap, Node.js, Laravel, PostgreSQL, MySQL, MongoDB, Git.
+- Experience: web developer intern at Fraemma (Telde), May – June 2026. Took part in migrating and further developing a private ERP/CRM with PHP and Laravel.
+- Main languages: Java, JavaScript, SQL. Also PHP, Kotlin, Python, React, Vite, Bootstrap, Node.js, Laravel, PostgreSQL, MySQL, MongoDB, AWS, Git.
 - Spoken languages: Spanish (native), English (C1, Cambridge), German (B1, Goethe-Institut).
 - Contact: roypara@icloud.com
 
@@ -12,6 +12,8 @@
 - [Portfolio (Spanish)](https://roypara.com/)
 - [Portfolio (English)](https://roypara.com/en/)
 - [CV (PDF, Spanish)](https://roypara.com/cv-roy-para.pdf)
+- [Europass CV (PDF, English)](https://roypara.com/cv-roy-para-europass-en.pdf)
+- [CV Europass (PDF, Spanish)](https://roypara.com/cv-roy-para-europass-es.pdf)
 
 ## Projects
 

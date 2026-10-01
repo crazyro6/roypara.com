@@ -30,12 +30,15 @@ export const profile = {
     },
   ] satisfies T[],
   email: "roypara@icloud.com",
+  // PDF de la carpeta public/. Cada uno solo aparece en el botón si su
+  // archivo existe; el Europass enlazado es el del idioma de la página.
   cv: {
     // CV normal, en español.
     standard: "/cv-roy-para.pdf",
-    // CV Europass, en inglés. Basta con dejar el PDF en public/ con este
-    // nombre: el botón se divide en dos automáticamente al hacer el build.
-    europass: "/cv-roy-para-europass.pdf",
+    europass: {
+      es: "/cv-roy-para-europass-es.pdf",
+      en: "/cv-roy-para-europass-en.pdf",
+    } satisfies T,
   },
   links: {
     github: "https://github.com/crazyro6",
@@ -90,12 +93,12 @@ export type TimelineItem = {
 
 export const experience: TimelineItem[] = [
   {
-    title: { es: "Desarrollador en prácticas", en: "Developer intern" },
-    place: "Fraemma Autorep · Telde",
+    title: { es: "Desarrollador web en prácticas", en: "Web developer intern" },
+    place: "Fraemma · Telde",
     period: { es: "may — jun 2026", en: "May — Jun 2026" },
     note: {
-      es: "Formación en empresa del ciclo de DAM (147 h). Programación, scripts de cliente web, bases de datos y administración de sistemas en un entorno de trabajo real.",
-      en: "Work placement as part of the DAM programme (147 h). Programming, client-side web scripting, databases and systems administration in a real work environment.",
+      es: "Prácticas del ciclo de DAM. Participé en la migración y el desarrollo posterior de un ERP/CRM privado con PHP y Laravel.",
+      en: "Work placement within the DAM programme. I took part in migrating a private ERP/CRM and then building on it with PHP and Laravel.",
     },
   },
 ];
@@ -130,7 +133,7 @@ export const education: TimelineItem[] = [
 export const stack: { group: T; items: string[] }[] = [
   {
     group: { es: "Lenguajes", en: "Programming" },
-    items: ["Java", "JavaScript", "Python", "PHP", "SQL", "HTML", "CSS"],
+    items: ["Java", "JavaScript", "PHP", "Kotlin", "Python", "SQL", "HTML", "CSS"],
   },
   {
     group: { es: "Frontend", en: "Front end" },
@@ -142,7 +145,7 @@ export const stack: { group: T; items: string[] }[] = [
   },
   {
     group: { es: "Herramientas", en: "Tools" },
-    items: ["Git", "IntelliJ IDEA", "VS Code", "NetBeans", "Raspberry Pi"],
+    items: ["Git", "IntelliJ IDEA", "VS Code", "Android Studio", "NetBeans", "AWS", "Raspberry Pi"],
   },
 ];
 

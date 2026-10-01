@@ -22,7 +22,7 @@ export const ui = {
   cvLangNote: { es: "PDF", en: "PDF, in Spanish" },
   cvGroup: { es: "Descargar currículum", en: "Download résumé" },
   cvStandardNote: { es: "", en: "Spanish" },
-  cvEuropassNote: { es: "en inglés", en: "English" },
+  cvEuropassNote: { es: "", en: "English" },
 
   projectsTitle: { es: "Proyectos", en: "Projects" },
   projectsIntro: {

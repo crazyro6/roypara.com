@@ -26,7 +26,7 @@ pnpm preview   # sirve dist/
 | Foto | `src/assets/roy.png` |
 | CV, favicon, imagen para redes | `public/` |
 
-**CV Europass:** guarda el PDF como `public/cv-roy-para-europass.pdf`. Al hacer el build, el botón de CV se divide solo en dos (CV normal en español + Europass en inglés). Si quitas el archivo, vuelve a ser un único botón.
+**CV:** hay tres PDF en `public/`: `cv-roy-para.pdf` (CV normal), `cv-roy-para-europass-es.pdf` y `cv-roy-para-europass-en.pdf`. El botón de CV muestra el normal y el Europass del idioma de la página. Las copias publicadas no llevan teléfono ni fecha de nacimiento.
 
 **Idioma automático:** quien entra en `/` con un navegador que no tiene el español entre sus idiomas pasa directamente a `/en/`. Si elige idioma con el selector, se recuerda y no se le vuelve a redirigir.
 
