@@ -46,6 +46,7 @@ const person = {
   url: site.href,
   image: ogImage,
   email: `mailto:${profile.email}`,
+  ...(profile.phone && { telephone: profile.phone }),
   jobTitle: tr(profile.role),
   address: {
     "@type": "PostalAddress",

@@ -26,7 +26,7 @@ pnpm preview   # sirve dist/
 | Foto | `src/assets/roy.png` |
 | CV, favicon, imagen para redes | `public/` |
 
-**CV:** hay tres PDF en `public/`: `cv-roy-para.pdf` (CV normal), `cv-roy-para-europass-es.pdf` y `cv-roy-para-europass-en.pdf`. El botón de CV muestra el normal y el Europass del idioma de la página. Las copias publicadas no llevan teléfono ni fecha de nacimiento.
+**CV:** hay tres PDF en `public/`: `cv-roy-para.pdf` (CV normal), `cv-roy-para-europass-es.pdf` y `cv-roy-para-europass-en.pdf`. El botón de CV muestra el normal y el Europass del idioma de la página. La copia publicada del Europass en inglés no lleva la fecha de nacimiento.
 
 **Idioma automático:** quien entra en `/` con un navegador que no tiene el español entre sus idiomas pasa directamente a `/en/`. Si elige idioma con el selector, se recuerda y no se le vuelve a redirigir.
 

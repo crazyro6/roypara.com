@@ -5,7 +5,7 @@
 - Experience: web developer intern at Fraemma (Telde), May – June 2026. Took part in migrating and further developing a private ERP/CRM with PHP and Laravel.
 - Main languages: Java, JavaScript, SQL. Also PHP, Kotlin, Python, React, Vite, Bootstrap, Node.js, Laravel, PostgreSQL, MySQL, MongoDB, AWS, Git.
 - Spoken languages: Spanish (native), English (C1, Cambridge), German (B1, Goethe-Institut).
-- Contact: roypara@icloud.com
+- Contact: roypara@icloud.com · +34 611 146 257
 
 ## Pages
 

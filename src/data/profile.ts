@@ -30,6 +30,8 @@ export const profile = {
     },
   ] satisfies T[],
   email: "roypara@icloud.com",
+  // Teléfono en la sección de contacto; null lo oculta.
+  phone: "+34 611 146 257" as string | null,
   // PDF de la carpeta public/. Cada uno solo aparece en el botón si su
   // archivo existe; el Europass enlazado es el del idioma de la página.
   cv: {

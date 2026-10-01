@@ -52,12 +52,13 @@ export const ui = {
 
   contactTitle: { es: "Hablemos", en: "Let's talk" },
   contactText: {
-    es: "Si buscas a alguien con ganas de aprender y de construir cosas útiles, escríbeme.",
-    en: "If you're looking for someone eager to learn and to build useful things, drop me a line.",
+    es: "Si buscas a alguien con ganas de aprender y de construir cosas útiles, escríbeme o llámame.",
+    en: "If you're looking for someone eager to learn and to build useful things, drop me a line or give me a call.",
   },
   copy: { es: "Copiar", en: "Copy" },
   copied: { es: "Copiado", en: "Copied" },
   copyEmail: { es: "Copiar email", en: "Copy email" },
+  copyPhone: { es: "Copiar teléfono", en: "Copy phone number" },
 
   builtWith: { es: "Hecha a mano con Astro", en: "Handmade with Astro" },
   sourceCode: { es: "Código de esta web", en: "Source" },
