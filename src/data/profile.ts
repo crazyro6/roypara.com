@@ -44,7 +44,7 @@ export const profile = {
   },
   links: {
     github: "https://github.com/crazyro6",
-    linkedin: "https://www.linkedin.com/in/roy-para-olivera-a6b42b386/",
+    linkedin: "https://www.linkedin.com/in/roy-para/",
   },
   githubUser: "crazyro6",
   // Calendario de contribuciones de GitHub. Cambia a true para mostrarlo.
