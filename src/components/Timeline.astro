@@ -1,4 +1,6 @@
 ---
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import type { TimelineItem } from "@/data/profile";
 import { useT, type Lang } from "@/i18n/ui";
 
@@ -10,7 +12,8 @@ interface Props {
 }
 
 const { lang, id, title, items } = Astro.props;
-const { tr } = useT(lang);
+const { t, tr } = useT(lang);
+const inPublic = (file: string) => existsSync(join(process.cwd(), "public", file));
 ---
 
 {
@@ -36,6 +39,17 @@ const { tr } = useT(lang);
                 )}
               </p>
               <p class="note">{tr(e.note)}</p>
+              {e.file && inPublic(e.file) && (
+                <p class="file">
+                  <a class="link" href={e.file} target="_blank" rel="noopener">
+                    {t("viewCertificate")}
+                    <span class="sr-only">: {tr(e.title)}</span>
+                    <span class="arrow" aria-hidden="true">
+                      ↗
+                    </span>
+                  </a>
+                </p>
+              )}
             </div>
           </li>
         ))}
@@ -77,6 +91,12 @@ const { tr } = useT(lang);
     margin-top: 0.35rem;
     max-width: 60ch;
     color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+
+  .file {
+    margin-top: 0.5rem;
+    color: var(--ink-2);
     font-size: var(--step--1);
   }
 

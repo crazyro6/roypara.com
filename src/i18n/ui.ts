@@ -47,6 +47,8 @@ export const ui = {
 
   experienceTitle: { es: "Experiencia", en: "Experience" },
   educationTitle: { es: "Formación", en: "Education" },
+  certificationsTitle: { es: "Certificaciones", en: "Certifications" },
+  viewCertificate: { es: "Ver certificado", en: "View certificate" },
   stackTitle: { es: "Con qué trabajo", en: "What I work with" },
   languagesTitle: { es: "Idiomas", en: "Languages" },
 

@@ -91,6 +91,8 @@ export type TimelineItem = {
   placeUrl?: string;
   period: T;
   note: T;
+  // PDF en public/ (p. ej. un certificado). El enlace solo aparece si el archivo existe.
+  file?: string;
 };
 
 export const experience: TimelineItem[] = [
@@ -132,6 +134,28 @@ export const education: TimelineItem[] = [
   },
 ];
 
+// Para añadir uno nuevo: copia un bloque, cambia los textos y, si tienes el
+// PDF, guárdalo en public/ con el nombre que pongas en `file`.
+export const certifications: TimelineItem[] = [
+  {
+    title: { es: "C1 Advanced (CAE)", en: "C1 Advanced (CAE)" },
+    place: "Cambridge English",
+    period: { es: "jun 2024", en: "Jun 2024" },
+    note: {
+      es: "Inglés, nivel C1. Puntuación global 186: Reading 172 · Use of English 196 · Writing 183 · Listening 196 · Speaking 181.",
+      en: "English, CEFR level C1. Overall score 186: Reading 172 · Use of English 196 · Writing 183 · Listening 196 · Speaking 181.",
+    },
+    file: "/certificado-c1-cambridge.pdf",
+  },
+  {
+    title: { es: "Goethe-Zertifikat B1", en: "Goethe-Zertifikat B1" },
+    place: "Goethe-Institut",
+    period: { es: "2024", en: "2024" },
+    note: { es: "Alemán, nivel B1.", en: "German, CEFR level B1." },
+    file: "/certificado-b1-goethe.pdf",
+  },
+];
+
 export const stack: { group: T; items: string[] }[] = [
   {
     group: { es: "Lenguajes", en: "Programming" },
@@ -153,6 +177,6 @@ export const stack: { group: T; items: string[] }[] = [
 
 export const languages: { name: T; level: T }[] = [
   { name: { es: "Español", en: "Spanish" }, level: { es: "Nativo", en: "Native" } },
-  { name: { es: "Inglés", en: "English" }, level: { es: "C1 · Cambridge", en: "C1 · Cambridge" } },
-  { name: { es: "Alemán", en: "German" }, level: { es: "B1 · Goethe-Institut", en: "B1 · Goethe-Institut" } },
+  { name: { es: "Inglés", en: "English" }, level: { es: "C1", en: "C1" } },
+  { name: { es: "Alemán", en: "German" }, level: { es: "B1", en: "B1" } },
 ];
