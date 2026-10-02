@@ -4,7 +4,7 @@
 
 - Experience: web developer intern at Fraemma (Telde), May – June 2026. Took part in migrating and further developing a private ERP/CRM with PHP and Laravel.
 - Main languages: Java, JavaScript, SQL. Also PHP, Kotlin, Python, React, Vite, Bootstrap, Node.js, Laravel, PostgreSQL, MySQL, MongoDB, AWS, Git.
-- Spoken languages: Spanish (native), English (C1 Advanced, Cambridge, overall score 186, June 2024), German (Goethe-Zertifikat B1).
+- Spoken languages: Spanish (native), English (C1 Advanced, Cambridge, overall score 186, June 2024), German (Goethe-Zertifikat B1, April 2024).
 - Contact: roypara@icloud.com · +34 611 146 257
 
 ## Pages
@@ -12,6 +12,7 @@
 - [Portfolio (Spanish)](https://roypara.com/)
 - [Portfolio (English)](https://roypara.com/en/)
 - [Cambridge C1 Advanced certificate (PDF)](https://roypara.com/certificado-c1-cambridge.pdf)
+- [Goethe-Zertifikat B1 certificate (PDF)](https://roypara.com/certificado-b1-goethe.pdf)
 - [CV (PDF, Spanish)](https://roypara.com/cv-roy-para.pdf)
 - [Europass CV (PDF, English)](https://roypara.com/cv-roy-para-europass-en.pdf)
 - [CV Europass (PDF, Spanish)](https://roypara.com/cv-roy-para-europass-es.pdf)

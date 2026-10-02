@@ -150,7 +150,7 @@ export const certifications: TimelineItem[] = [
   {
     title: { es: "Goethe-Zertifikat B1", en: "Goethe-Zertifikat B1" },
     place: "Goethe-Institut",
-    period: { es: "2024", en: "2024" },
+    period: { es: "abr 2024", en: "Apr 2024" },
     note: { es: "Alemán, nivel B1.", en: "German, CEFR level B1." },
     file: "/certificado-b1-goethe.pdf",
   },
