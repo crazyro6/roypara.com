@@ -30,3 +30,8 @@ pnpm-debug.log*
 .impeccable/
 
 Portfolio personal.code-workspace
+# banner de LinkedIn y otros materiales sociales (solo locales)
+social/
+
+# configuración local del servidor de pruebas
+.claude/
