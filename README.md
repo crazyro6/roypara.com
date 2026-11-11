@@ -23,7 +23,7 @@ pnpm preview   # sirve dist/
 | Textos de la interfaz (ES/EN) | `src/i18n/ui.ts` |
 | Colores, tipografía y espaciado | `src/styles/global.css` |
 | Secciones | `src/components/` |
-| Foto | `src/assets/roy.png` |
+| Foto | `src/assets/roy.jpg` |
 | CV, favicon, imagen para redes | `public/` |
 
 **CV:** hay tres PDF en `public/`: `cv-roy-para.pdf` (CV normal), `cv-roy-para-europass-es.pdf` y `cv-roy-para-europass-en.pdf`. El botón de CV muestra el normal y el Europass del idioma de la página.

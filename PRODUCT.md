@@ -22,8 +22,8 @@ References he likes: walterteng.com (single column, text-first, personal touches
 ## Design Principles
 1. Content first: every element must help a recruiter decide in under a minute.
 2. Honest junior: show real work and learning; never inflate.
-3. Personal through details, not decoration: the hero radar plots real flights picked up by Roy's own ADS-B antenna (tools/capture-flights.py → src/data/flights.json); copy written in first person, like a note. Gran Canaria is context, not the headline.
-4. One living scene, everything else calm: the hero is a 3D canvas replay of the recorded sky (src/lib/radar.ts): aircraft fly their real routes at their real altitudes, sped up, with fading trails; the view tilts in on load, drifts slowly and follows the pointer a little. Nothing else on the page loops. Reduced motion: one static frame with all trails.
+3. Personal through details, not decoration: the hero is a LIVE 3D radar of the aircraft Roy's own ADS-B antenna picks up right now (Raspberry Pi → Cloudflare Tunnel → Worker /api/aviones → canvas); click a plane for its card (HexDB + Planespotters). If the antenna is unreachable the radar shows empty with an honest notice, never a recording. Copy is first person, like a note; Gran Canaria is context, not the headline.
+4. One living scene, everything else calm: the hero canvas (src/lib/radar.ts) draws the aircraft at their real altitude over the islands with fading trails, tilts in on load, drifts slowly, rotates by drag and follows the pointer a little. Nothing else on the page loops. Reduced motion: no animation, redrawn only when new data arrives.
 5. Bilingual and accessible by default.
 
 ## Visual system

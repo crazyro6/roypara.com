@@ -12,8 +12,6 @@ export const profile = {
   } satisfies T,
   location: "Vecindario, Gran Canaria",
   coordinates: "27°50′N 15°26′W",
-  // Centro del radar si flights.json no trae el del receptor.
-  radarCenter: [27.84, -15.44] as [number, number],
   timeZone: "Atlantic/Canary",
   // Presentación de la portada, en primera persona.
   intro: [

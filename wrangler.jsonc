@@ -1,10 +1,14 @@
-// Configuración de Cloudflare Workers: sirve la web estática generada en dist/.
+// Configuración de Cloudflare Workers: sirve la web estática generada en dist/
+// y deja que worker/index.ts atienda solo /api/* (el radar en directo).
 {
   "name": "roypara-com",
   "compatibility_date": "2026-09-22",
+  "main": "./worker/index.ts",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "html_handling": "auto-trailing-slash"
+    "html_handling": "auto-trailing-slash",
+    "run_worker_first": ["/api/*"]
   }
 }

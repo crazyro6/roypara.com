@@ -131,6 +131,11 @@ button {
   color: inherit;
 }
 
+/* `display` en una regla propia no debe anular el atributo hidden. */
+[hidden] {
+  display: none !important;
+}
+
 ::selection {
   background: var(--selection);
   color: var(--ink);
@@ -297,6 +302,40 @@ a:hover .arrow {
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
   }
+}
+
+/* Horizonte: el cielo termina en un arco con dos líneas concéntricas,
+   como si los anillos del radar siguieran hasta el borde de la página. */
+.horizon {
+  position: absolute;
+  inset: auto -12% -1px;
+  height: clamp(2.5rem, 6vw, 5.5rem);
+  border-top: 1px solid color-mix(in oklch, var(--scope-ink) 28%, transparent);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: var(--bg);
+  pointer-events: none;
+}
+
+.horizon::before {
+  content: "";
+  position: absolute;
+  inset: -1.5rem -4% 0;
+  border-top: 1px solid color-mix(in oklch, var(--scope-ink) 12%, transparent);
+  border-radius: inherit;
+}
+
+/* En la cabecera del cierre, el arco va al revés. */
+.horizon--top {
+  inset: -1px -12% auto;
+  border-top: 0;
+  border-bottom: 1px solid color-mix(in oklch, var(--scope-ink) 28%, transparent);
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+}
+
+.horizon--top::before {
+  inset: 0 -4% -1.5rem;
+  border-top: 0;
+  border-bottom: 1px solid color-mix(in oklch, var(--scope-ink) 12%, transparent);
 }
 
 /* Grano muy fino para que el cielo no se vea plano. */

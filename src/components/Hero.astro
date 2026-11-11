@@ -3,8 +3,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import Radar from "./Radar.astro";
 import { profile } from "@/data/profile";
-import { loadCapture, scene } from "@/lib/flights";
-import { htmlLang, useT, type Lang } from "@/i18n/ui";
+import { useT, type Lang } from "@/i18n/ui";
 
 interface Props {
   lang: Lang;
@@ -17,32 +16,15 @@ const { t, tr } = useT(lang);
 const inPublic = (file: string) => existsSync(join(process.cwd(), "public", file));
 const cv = inPublic(profile.cv.standard) ? profile.cv.standard : null;
 const europass = inPublic(tr(profile.cv.europass)) ? tr(profile.cv.europass) : null;
-
-const loaded = loadCapture();
-const sky = scene(loaded?.capture, profile.radarCenter);
-const flights = sky.tracks.length;
-
-const caption = (() => {
-  if (!loaded) return null;
-  if (loaded.sample) return t("radarSample");
-  const opts = { timeZone: profile.timeZone, hourCycle: "h23" } as const;
-  const hm = new Intl.DateTimeFormat(htmlLang[lang], { ...opts, hour: "2-digit", minute: "2-digit" });
-  const from = new Date(loaded.capture.from);
-  return t("radarCaption", {
-    day: new Intl.DateTimeFormat(htmlLang[lang], { ...opts, day: "numeric", month: "short" }).format(from),
-    from: hm.format(from),
-    to: hm.format(new Date(loaded.capture.to)),
-  });
-})();
 ---
 
 <section class="hero on-scope" aria-labelledby="hero-title">
-  <Radar scene={sky} lang={lang} class="sky" label={flights ? t("radarAlt", { n: flights }) : undefined} />
+  <Radar lang={lang} class="sky" label={t("radarAlt")} />
   <div class="scrim" aria-hidden="true"></div>
   <div class="grain layer" aria-hidden="true"></div>
 
   <div class="wrap inner">
-    <div class="copy">
+    <div class="copy" data-no-drag>
       <p class="who data rise" style="--i:0">{profile.name} · {tr(profile.role)}</p>
       <h1 id="hero-title" class="hello rise" style="--i:1">{t("hello")}</h1>
       <div class="intro rise" style="--i:2">
@@ -81,18 +63,41 @@ const caption = (() => {
     </div>
   </div>
 
-  {
-    caption && (
-      <div class="wrap readout data rise" style="--i:5">
-        <p>{caption}</p>
-        {flights > 0 && (
-          <p class="live">
-            <span data-radar-clock>--:--</span> · <span data-radar-count>0</span> {t("radarInAir")}
-          </p>
-        )}
+  <div class="wrap readout data rise" style="--i:5">
+    <p class="status" hidden>
+      <span class="dot" aria-hidden="true"></span>
+      <span data-radar-status role="status"></span>
+    </p>
+    <p>{t("radarHint")}</p>
+  </div>
+
+  <!-- Ficha del avión pulsado; la rellena src/lib/radar.ts. -->
+  <aside class="flight" data-flight-card data-no-drag hidden aria-live="polite" aria-label={t("flightCard")}>
+    <img data-f="photo" alt="" hidden />
+    <div class="flight-body">
+      <div class="flight-head">
+        <p class="callsign data" data-f="callsign"></p>
+        <button type="button" class="close" data-flight-close aria-label={t("close")}>
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+            ></path>
+          </svg>
+        </button>
       </div>
-    )
-  }
+      <p class="route" data-f="route"></p>
+      <dl>
+        <div><dt>{t("flightAirline")}</dt><dd data-f="airline"></dd></div>
+        <div><dt>{t("flightModel")}</dt><dd data-f="model"></dd></div>
+        <div><dt>{t("flightReg")}</dt><dd class="data" data-f="reg"></dd></div>
+        <div><dt>{t("flightAlt")}</dt><dd class="data" data-f="alt"></dd></div>
+        <div><dt>{t("flightSpeed")}</dt><dd class="data" data-f="speed"></dd></div>
+        <div><dt>{t("flightHeading")}</dt><dd class="data" data-f="heading"></dd></div>
+      </dl>
+      <a class="credit" data-f="credit" target="_blank" rel="noopener" hidden></a>
+    </div>
+  </aside>
+
+  <div class="horizon" aria-hidden="true"></div>
 </section>
 
 <style>
@@ -101,8 +106,18 @@ const caption = (() => {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    padding-block: 21rem 2rem;
+    padding-block: 21rem 7rem;
     background: var(--scope);
+    /* La escena se gira arrastrando; el texto sigue siendo seleccionable. */
+    cursor: grab;
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  .copy,
+  .flight {
+    cursor: auto;
+    user-select: text;
   }
 
   /* En móvil la escena va arriba, lo primero que se ve. */
@@ -133,8 +148,8 @@ const caption = (() => {
     .hero {
       display: grid;
       align-items: center;
-      min-height: max(42rem, 100svh);
-      padding-block: 6rem 5rem;
+      min-height: max(44rem, 100svh);
+      padding-block: 6rem 9rem;
     }
 
     /* En escritorio llena la pantalla y se sale por la derecha. */
@@ -209,18 +224,128 @@ const caption = (() => {
     font-size: var(--step--1);
   }
 
-  .live {
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     color: var(--ink);
+  }
+
+  .dot {
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--ink-3);
+  }
+
+  .hero[data-radar-state="live"] .dot,
+  .hero[data-radar-state="quiet"] .dot {
+    background: oklch(0.8 0.17 150);
+    box-shadow: 0 0 0 3px oklch(0.8 0.17 150 / 0.22);
+  }
+
+  .hero[data-radar-state="offline"] .dot {
+    background: oklch(0.74 0.15 45);
   }
 
   @media (min-width: 60rem) {
     .readout {
       position: absolute;
-      inset: auto 0 1.5rem;
+      inset: auto 0 6.5rem;
       justify-items: end;
       margin-top: 0;
       text-align: right;
     }
+  }
+
+  /* Ficha del avión: una ventanita fija abajo a la derecha. */
+  .flight {
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: 1rem;
+    z-index: var(--z-header);
+    width: min(20rem, 100vw - 2rem);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: oklch(0.2 0.03 254);
+    box-shadow: 0 24px 60px -20px oklch(0 0 0 / 0.7);
+    animation: rise 0.5s var(--ease-out);
+  }
+
+  .flight img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: var(--scope);
+  }
+
+  .flight-body {
+    display: grid;
+    gap: 0.6rem;
+    padding: 1rem 1.1rem 1.1rem;
+  }
+
+  .flight-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .callsign {
+    color: var(--track);
+    font-size: var(--step-1);
+  }
+
+  .close {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition:
+      color 0.2s var(--ease-out),
+      background-color 0.2s var(--ease-out);
+  }
+
+  .close:hover {
+    color: var(--ink);
+    background: var(--surface);
+  }
+
+  .route {
+    font-size: var(--step-2);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .flight dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem 1rem;
+    margin-top: 0.25rem;
+    font-size: var(--step--1);
+  }
+
+  .flight dt {
+    color: var(--ink-3);
+  }
+
+  .flight dd {
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .credit {
+    color: var(--ink-3);
+    font-size: 0.75rem;
   }
 
   @media (max-width: 30rem) {

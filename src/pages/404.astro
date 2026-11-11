@@ -3,13 +3,11 @@ import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Radar from "@/components/Radar.astro";
 import { profile } from "@/data/profile";
-import { scene } from "@/lib/flights";
 import { useT } from "@/i18n/ui";
 
 // Página única y bilingüe: Cloudflare la sirve para cualquier ruta inexistente.
 const es = useT("es").t;
 const en = useT("en").t;
-const empty = scene(undefined, profile.radarCenter);
 ---
 
 <Layout lang="es" title={`404 · ${profile.name}`} noindex>
@@ -27,7 +25,7 @@ const empty = scene(undefined, profile.radarCenter);
           <a class="btn btn--line" href="/en/" lang="en">{en("backHome")}</a>
         </p>
       </div>
-      <Radar scene={empty} lang="es" class="scope" />
+      <Radar lang="es" class="scope" live={false} />
     </div>
   </main>
 </Layout>
