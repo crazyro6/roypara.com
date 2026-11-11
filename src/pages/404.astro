@@ -3,13 +3,13 @@ import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Radar from "@/components/Radar.astro";
 import { profile } from "@/data/profile";
-import { plot } from "@/lib/flights";
+import { scene } from "@/lib/flights";
 import { useT } from "@/i18n/ui";
 
 // Página única y bilingüe: Cloudflare la sirve para cualquier ruta inexistente.
 const es = useT("es").t;
 const en = useT("en").t;
-const empty = plot(undefined, profile.radarCenter);
+const empty = scene(undefined, profile.radarCenter);
 ---
 
 <Layout lang="es" title={`404 · ${profile.name}`} noindex>
@@ -27,9 +27,7 @@ const empty = plot(undefined, profile.radarCenter);
           <a class="btn btn--line" href="/en/" lang="en">{en("backHome")}</a>
         </p>
       </div>
-      <div class="scope rise" style="--i:2">
-        <Radar radar={empty} />
-      </div>
+      <Radar scene={empty} lang="es" class="scope" />
     </div>
   </main>
 </Layout>
@@ -40,9 +38,7 @@ const empty = plot(undefined, profile.radarCenter);
     align-items: center;
     min-height: 100svh;
     padding-block: 6rem 3rem;
-    background:
-      radial-gradient(50rem 40rem at 72% 50%, color-mix(in oklch, var(--scope-glow) 70%, transparent), transparent 70%),
-      var(--scope);
+    background: var(--scope);
   }
 
   .inner {
@@ -85,8 +81,12 @@ const empty = plot(undefined, profile.radarCenter);
     margin-top: 2rem;
   }
 
-  .scope {
+  .notfound :global(.scope) {
+    --cy: 0.6;
+    --rw: 0.48;
+    --rh: 1;
     justify-self: center;
-    width: min(100%, 28rem);
+    width: min(100%, 34rem);
+    aspect-ratio: 4 / 3;
   }
 </style>

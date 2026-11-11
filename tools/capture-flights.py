@@ -9,6 +9,7 @@ Lee el aircraft.json de dump1090 / SkyAware / tar1090 cada pocos segundos y,
 al terminar (o con Ctrl+C), escribe flights.json. Copia ese archivo a
 src/data/flights.json en el repo de la web y vuelve a desplegar.
 
+Cada punto es [lat, lon, altitud en pies, segundos desde el inicio].
 No guarda el código hex de los aviones, solo el indicativo y las posiciones.
 La posición del receptor se redondea a 2 decimales (~1 km).
 """
@@ -59,9 +60,10 @@ def main():
     except Exception:
         pass
 
-    tracks = {}  # hex -> {"flight": str, "points": [[lat, lon], ...]}
+    tracks = {}  # hex -> {"flight": str, "points": [[lat, lon, alt, t], ...]}
     start = datetime.now(timezone.utc)
-    end_at = time.monotonic() + args.minutes * 60
+    began = time.monotonic()
+    end_at = began + args.minutes * 60
     print(f"Grabando desde {base} durante {args.minutes:g} min (Ctrl+C para parar antes)…")
 
     try:
@@ -78,8 +80,10 @@ def main():
                 t = tracks.setdefault(a["hex"], {"flight": "", "points": []})
                 if a.get("flight", "").strip():
                     t["flight"] = a["flight"].strip()
-                p = [round(a["lat"], 3), round(a["lon"], 3)]
-                if not t["points"] or t["points"][-1] != p:
+                alt = a.get("alt_baro", a.get("alt_geom"))
+                alt = 0 if alt == "ground" else alt if isinstance(alt, (int, float)) else None
+                p = [round(a["lat"], 3), round(a["lon"], 3), alt, round(time.monotonic() - began)]
+                if not t["points"] or t["points"][-1][:2] != p[:2]:
                     t["points"].append(p)
             print(f"\r{len(tracks)} aviones vistos", end="", flush=True)
             time.sleep(args.interval)

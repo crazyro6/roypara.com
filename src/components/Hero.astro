@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import Radar from "./Radar.astro";
 import { profile } from "@/data/profile";
-import { loadCapture, plot } from "@/lib/flights";
+import { loadCapture, scene } from "@/lib/flights";
 import { htmlLang, useT, type Lang } from "@/i18n/ui";
 
 interface Props {
@@ -19,7 +19,8 @@ const cv = inPublic(profile.cv.standard) ? profile.cv.standard : null;
 const europass = inPublic(tr(profile.cv.europass)) ? tr(profile.cv.europass) : null;
 
 const loaded = loadCapture();
-const radar = plot(loaded?.capture, profile.radarCenter);
+const sky = scene(loaded?.capture, profile.radarCenter);
+const flights = sky.tracks.length;
 
 const caption = (() => {
   if (!loaded) return null;
@@ -28,7 +29,6 @@ const caption = (() => {
   const hm = new Intl.DateTimeFormat(htmlLang[lang], { ...opts, hour: "2-digit", minute: "2-digit" });
   const from = new Date(loaded.capture.from);
   return t("radarCaption", {
-    n: radar.tracks.length,
     day: new Intl.DateTimeFormat(htmlLang[lang], { ...opts, day: "numeric", month: "short" }).format(from),
     from: hm.format(from),
     to: hm.format(new Date(loaded.capture.to)),
@@ -37,6 +37,8 @@ const caption = (() => {
 ---
 
 <section class="hero on-scope" aria-labelledby="hero-title">
+  <Radar scene={sky} lang={lang} class="sky" label={flights ? t("radarAlt", { n: flights }) : undefined} />
+  <div class="scrim" aria-hidden="true"></div>
   <div class="grain layer" aria-hidden="true"></div>
 
   <div class="wrap inner">
@@ -77,48 +79,48 @@ const caption = (() => {
         }
       </p>
     </div>
-
-    <figure class="scope">
-      <Radar radar={radar} title={radar.tracks.length ? t("radarAlt", { n: radar.tracks.length }) : undefined} />
-      <figcaption class="readout data">
-        {caption && <p>{caption}</p>}
-        <p>
-          {radar.tracks.length > 0 && <>{t("radarCount", { n: radar.tracks.length })} · </>}
-          {t("radarRange", { n: radar.r })} ·{" "}
-          <time data-clock data-tz={profile.timeZone} data-locale={htmlLang[lang]}>--:--</time>{" "}
-          {t("localTime")}
-        </p>
-      </figcaption>
-    </figure>
   </div>
+
+  {
+    caption && (
+      <div class="wrap readout data rise" style="--i:5">
+        <p>{caption}</p>
+        {flights > 0 && (
+          <p class="live">
+            <span data-radar-clock>--:--</span> · <span data-radar-count>0</span> {t("radarInAir")}
+          </p>
+        )}
+      </div>
+    )
+  }
 </section>
 
-<script>
-  const els = document.querySelectorAll<HTMLTimeElement>("[data-clock]");
-  const tick = () =>
-    els.forEach((el) => {
-      el.textContent = new Intl.DateTimeFormat(el.dataset.locale, {
-        timeZone: el.dataset.tz,
-        hour: "2-digit",
-        minute: "2-digit",
-        hourCycle: "h23",
-      }).format(new Date());
-    });
-  tick();
-  setInterval(tick, 15_000);
-</script>
-
 <style>
-  /* A sangre, del borde de arriba (bajo la cabecera) al final de la pantalla. */
+  /* Toda la primera pantalla es el cielo; el texto va encima. */
   .hero {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    padding-block: 6.5rem 3.5rem;
-    background:
-      radial-gradient(60rem 44rem at 72% 48%, color-mix(in oklch, var(--scope-glow) 70%, transparent), transparent 70%),
-      radial-gradient(120% 90% at 50% 0%, transparent 55%, oklch(0 0 0 / 0.35)),
-      var(--scope);
+    padding-block: 21rem 2rem;
+    background: var(--scope);
+  }
+
+  /* En móvil la escena va arriba, lo primero que se ve. */
+  .hero :global(.sky) {
+    --cx: 0.5;
+    --cy: 0.62;
+    --rw: 0.6;
+    --rh: 1;
+    position: absolute;
+    inset: 3.5rem 0 auto;
+    z-index: -2;
+    height: 18.5rem;
+    -webkit-mask-image: linear-gradient(#000 80%, transparent);
+    mask-image: linear-gradient(#000 80%, transparent);
+  }
+
+  .scrim {
+    display: none;
   }
 
   .layer {
@@ -127,24 +129,38 @@ const caption = (() => {
     z-index: -1;
   }
 
-  .inner {
-    display: grid;
-    gap: 3rem;
-  }
-
   @media (min-width: 60rem) {
     .hero {
       display: grid;
       align-items: center;
-      min-height: max(40rem, 100svh);
-      padding-block: 6rem 3rem;
+      min-height: max(42rem, 100svh);
+      padding-block: 6rem 5rem;
     }
 
-    .inner {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-      align-items: center;
-      gap: 4rem;
+    /* En escritorio llena la pantalla y se sale por la derecha. */
+    .hero :global(.sky) {
+      --cx: 0.7;
+      --cy: 0.57;
+      --rw: 0.44;
+      --rh: 0.98;
+      inset: 0;
+      height: auto;
+      -webkit-mask-image: none;
+      mask-image: none;
     }
+
+    /* Deja limpio el lado del texto. */
+    .scrim {
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(90deg, var(--scope) 30%, transparent 60%);
+    }
+  }
+
+  .copy {
+    max-width: 33rem;
   }
 
   .who {
@@ -162,7 +178,6 @@ const caption = (() => {
   .intro {
     display: grid;
     gap: 0.9rem;
-    max-width: 32rem;
     margin-top: 1.5rem;
     color: var(--ink-2);
     font-size: var(--step-1);
@@ -185,26 +200,27 @@ const caption = (() => {
     font-size: var(--step--1);
   }
 
-  .scope {
-    display: grid;
-    justify-items: center;
-    gap: 1.25rem;
-  }
-
-  .scope :global(.radar) {
-    width: min(100%, 40rem, 76svh);
-  }
-
+  /* Lectura del radar: qué se está viendo y el reloj de la reproducción. */
   .readout {
     display: grid;
-    gap: 0.2rem;
-    color: var(--ink-2);
+    gap: 0.15rem;
+    margin-top: 2.5rem;
+    color: var(--ink-3);
     font-size: var(--step--1);
-    text-align: center;
   }
 
-  .readout time {
+  .live {
     color: var(--ink);
+  }
+
+  @media (min-width: 60rem) {
+    .readout {
+      position: absolute;
+      inset: auto 0 1.5rem;
+      justify-items: end;
+      margin-top: 0;
+      text-align: right;
+    }
   }
 
   @media (max-width: 30rem) {
