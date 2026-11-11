@@ -1,9 +1,9 @@
 ---
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { Image } from "astro:assets";
-import photo from "@/assets/roy.png";
+import Radar from "./Radar.astro";
 import { profile } from "@/data/profile";
+import { loadCapture, plot } from "@/lib/flights";
 import { htmlLang, useT, type Lang } from "@/i18n/ui";
 
 interface Props {
@@ -15,303 +15,201 @@ const { t, tr } = useT(lang);
 
 // Cada CV solo aparece si su PDF existe en public/.
 const inPublic = (file: string) => existsSync(join(process.cwd(), "public", file));
-const cvs = [
-  // Con un solo PDF el botón es entero y lleva la nota corta ("PDF").
-  { href: profile.cv.standard, label: t("downloadCv"), note: t("cvStandardNote"), solo: t("cvLangNote") },
-  { href: tr(profile.cv.europass), label: "Europass", note: t("cvEuropassNote"), sr: "CV " },
-].filter((cv) => inPublic(cv.href));
-if (cvs.length === 1 && cvs[0].solo) cvs[0].note = cvs[0].solo;
+const cv = inPublic(profile.cv.standard) ? profile.cv.standard : null;
+const europass = inPublic(tr(profile.cv.europass)) ? tr(profile.cv.europass) : null;
 
-const links = [
-  { label: "GitHub", href: profile.links.github },
-  { label: "LinkedIn", href: profile.links.linkedin },
-];
+const loaded = loadCapture();
+const radar = plot(loaded?.capture, profile.radarCenter);
+
+const caption = (() => {
+  if (!loaded) return null;
+  if (loaded.sample) return t("radarSample");
+  const opts = { timeZone: profile.timeZone, hourCycle: "h23" } as const;
+  const hm = new Intl.DateTimeFormat(htmlLang[lang], { ...opts, hour: "2-digit", minute: "2-digit" });
+  const from = new Date(loaded.capture.from);
+  return t("radarCaption", {
+    n: radar.tracks.length,
+    day: new Intl.DateTimeFormat(htmlLang[lang], { ...opts, day: "numeric", month: "short" }).format(from),
+    from: hm.format(from),
+    to: hm.format(new Date(loaded.capture.to)),
+  });
+})();
 ---
 
-<section class="hero" aria-labelledby="hero-name">
-  <div class="head">
-    {
-      profile.status && (
-        <p class="status rise" style="--i:0">
-          <span class="dot" aria-hidden="true" />
-          {tr(profile.status)}
-        </p>
-      )
-    }
-    <div class="id">
-      <h1 id="hero-name" class="name rise" style="--i:1">{profile.name}</h1>
-      <p class="role rise" style="--i:2">{tr(profile.role)}</p>
+<section class="hero on-scope" aria-labelledby="hero-title">
+  <div class="grain layer" aria-hidden="true"></div>
+
+  <div class="wrap inner">
+    <div class="copy">
+      <p class="who data rise" style="--i:0">{profile.name} · {tr(profile.role)}</p>
+      <h1 id="hero-title" class="hello rise" style="--i:1">{t("hello")}</h1>
+      <div class="intro rise" style="--i:2">
+        {profile.intro.map((p) => <p>{tr(p)}</p>)}
+      </div>
+
+      <div class="actions rise" style="--i:3">
+        <a class="btn btn--fill" href={`mailto:${profile.email}`}>{t("writeMe")}</a>
+        {
+          cv && (
+            <a class="btn btn--line" href={cv} target="_blank" rel="noopener">
+              {t("downloadCv")}
+            </a>
+          )
+        }
+      </div>
+
+      <p class="more rise" style="--i:4">
+        <a class="link" href={profile.links.github} target="_blank" rel="me noopener">
+          GitHub<span class="arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="link" href={profile.links.linkedin} target="_blank" rel="me noopener">
+          LinkedIn<span class="arrow" aria-hidden="true">↗</span>
+        </a>
+        {
+          europass && (
+            <a class="link" href={europass} target="_blank" rel="noopener">
+              {t("cvEuropass")}
+              <span class="arrow" aria-hidden="true">
+                ↗
+              </span>
+            </a>
+          )
+        }
+      </p>
     </div>
-    <Image
-      class="photo rise"
-      style="--i:1"
-      src={photo}
-      alt={t("photoAlt")}
-      width={144}
-      height={144}
-      densities={[1, 2]}
-      loading="eager"
-      fetchpriority="high"
-    />
+
+    <figure class="scope">
+      <Radar radar={radar} title={radar.tracks.length ? t("radarAlt", { n: radar.tracks.length }) : undefined} />
+      <figcaption class="readout data">
+        {caption && <p>{caption}</p>}
+        <p>
+          {radar.tracks.length > 0 && <>{t("radarCount", { n: radar.tracks.length })} · </>}
+          {t("radarRange", { n: radar.r })} ·{" "}
+          <time data-clock data-tz={profile.timeZone} data-locale={htmlLang[lang]}>--:--</time>{" "}
+          {t("localTime")}
+        </p>
+      </figcaption>
+    </figure>
   </div>
-
-  <div class="bio rise" style="--i:3">
-    {profile.bio.map((p) => <p>{tr(p)}</p>)}
-  </div>
-
-  <p class="meta mono rise" style="--i:4">
-    <span>{profile.location}</span>
-    <span class="coords" aria-hidden="true">{profile.coordinates}</span>
-    <span class="clock">
-      <time data-clock data-tz={profile.timeZone} data-locale={htmlLang[lang]}>--:--</time>
-      {t("localTime")}
-    </span>
-  </p>
-
-  <ul class="links rise" style="--i:5" role="list">
-    {
-      links.map((l) => (
-        <li>
-          <a class="link" href={l.href} target="_blank" rel="me noopener">
-            {l.label}
-            <span class="arrow" aria-hidden="true">
-              ↗
-            </span>
-          </a>
-        </li>
-      ))
-    }
-    <li>
-      <a class="link" href={`mailto:${profile.email}`}>Email</a>
-    </li>
-    {
-      cvs.length > 0 && (
-        <li>
-          <div class="cv" role="group" aria-label={t("cvGroup")}>
-            {cvs.map((cv) => (
-              <a href={cv.href} target="_blank" rel="noopener">
-                {cv.sr && <span class="sr-only">{cv.sr}</span>}
-                {cv.label}
-                {cv.note && <span class="note mono">{cv.note}</span>}
-              </a>
-            ))}
-          </div>
-        </li>
-      )
-    }
-  </ul>
 </section>
 
 <script>
   const els = document.querySelectorAll<HTMLTimeElement>("[data-clock]");
   const tick = () =>
     els.forEach((el) => {
-      const fmt = new Intl.DateTimeFormat(el.dataset.locale, {
+      el.textContent = new Intl.DateTimeFormat(el.dataset.locale, {
         timeZone: el.dataset.tz,
         hour: "2-digit",
         minute: "2-digit",
         hourCycle: "h23",
-      });
-      el.textContent = fmt.format(new Date());
+      }).format(new Date());
     });
   tick();
   setInterval(tick, 15_000);
 </script>
 
 <style>
+  /* A sangre, del borde de arriba (bajo la cabecera) al final de la pantalla. */
   .hero {
-    padding-top: clamp(1rem, 0.5rem + 2.5vw, 2.5rem);
-  }
-
-  /* Nombre a la izquierda, foto a la derecha. */
-  .head {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "status photo"
-      "id photo";
-    column-gap: 1.25rem;
-  }
-
-  .head .status {
-    grid-area: status;
-    align-self: end;
-    justify-self: start;
-  }
-
-  .id {
-    grid-area: id;
-    align-self: start;
-  }
-
-  .photo {
-    grid-area: photo;
-    align-self: center;
-  }
-
-  /* En móvil el estado ocupa toda la fila y la foto va junto al nombre. */
-  @media (max-width: 30rem) {
-    .head {
-      grid-template-areas:
-        "status status"
-        "id photo";
-    }
-
-    .id {
-      align-self: center;
-    }
-  }
-
-  .photo {
-    width: clamp(5.5rem, 4rem + 6vw, 8.75rem);
-    height: auto;
-    aspect-ratio: 1;
-    margin: 6px;
-    border-radius: 999px;
-    object-fit: cover;
-    background: var(--card);
-    box-shadow:
-      0 0 0 1px var(--card-line),
-      0 0 0 6px color-mix(in oklch, var(--card) 70%, transparent),
-      0 18px 40px -22px oklch(0.3 0.06 240 / 0.45);
-  }
-
-  .status {
-    display: inline-flex;
-    margin-bottom: 1.1rem;
-    align-items: center;
-    gap: 0.55rem;
-    padding: 0.3rem 0.8rem 0.3rem 0.65rem;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    color: var(--ink-2);
-    font-size: var(--step--1);
-    line-height: 1.4;
-  }
-
-  .dot {
     position: relative;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 999px;
-    background: var(--live);
-    flex: none;
+    isolation: isolate;
+    overflow: hidden;
+    padding-block: 6.5rem 3.5rem;
+    background:
+      radial-gradient(60rem 44rem at 72% 48%, color-mix(in oklch, var(--scope-glow) 70%, transparent), transparent 70%),
+      radial-gradient(120% 90% at 50% 0%, transparent 55%, oklch(0 0 0 / 0.35)),
+      var(--scope);
   }
 
-  .dot::after {
-    content: "";
+  .layer {
     position: absolute;
     inset: 0;
-    border-radius: inherit;
-    background: var(--live);
-    animation: ping 2.6s var(--ease-out) infinite;
+    z-index: -1;
   }
 
-  @keyframes ping {
-    0% {
-      transform: scale(1);
-      opacity: 0.55;
+  .inner {
+    display: grid;
+    gap: 3rem;
+  }
+
+  @media (min-width: 60rem) {
+    .hero {
+      display: grid;
+      align-items: center;
+      min-height: max(40rem, 100svh);
+      padding-block: 6rem 3rem;
     }
-    70%,
-    100% {
-      transform: scale(2.6);
-      opacity: 0;
+
+    .inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      align-items: center;
+      gap: 4rem;
     }
   }
 
-  .name {
-    font-size: var(--step-3);
-    letter-spacing: -0.025em;
+  .who {
+    color: var(--ink-2);
+    font-size: var(--step--1);
   }
 
-  .role {
-    margin-top: 0.35rem;
+  .hello {
+    margin-top: 1.1rem;
+    font-size: var(--step-4);
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .intro {
+    display: grid;
+    gap: 0.9rem;
+    max-width: 32rem;
+    margin-top: 1.5rem;
     color: var(--ink-2);
     font-size: var(--step-1);
+    line-height: 1.5;
   }
 
-  .bio {
-    display: grid;
-    gap: 1rem;
-    margin-top: 1.75rem;
-    max-width: 62ch;
-    color: var(--ink-2);
-  }
-
-  .meta {
+  .actions {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.25rem 1.1rem;
-    margin-top: 1.75rem;
-    color: var(--ink-3);
-    font-size: var(--step--1);
+    gap: 0.75rem;
+    margin-top: 2.25rem;
   }
 
-  .clock time {
-    color: var(--ink);
-    display: inline-block;
-    min-width: 5ch;
-    margin-right: 0.5ch;
-  }
-
-  .links {
+  .more {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem 1.5rem;
+    gap: 0.5rem 1.5rem;
     margin-top: 1.5rem;
-    padding: 0;
-    list-style: none;
-  }
-
-  /* Botón de CV: una píldora que se divide en dos si hay Europass. */
-  .cv {
-    display: inline-flex;
-    border-radius: 999px;
-    background: var(--ink);
-    overflow: hidden;
-    transition: transform 0.3s var(--ease-out);
-  }
-
-  .cv:hover {
-    transform: translateY(-1px);
-  }
-
-  .cv a {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    padding: 0.45rem 0.95rem;
-    color: var(--bg);
+    color: var(--ink-2);
     font-size: var(--step--1);
-    font-weight: 600;
-    text-decoration: none;
-    transition: background-color 0.2s var(--ease-out);
   }
 
-  .cv a + a {
-    border-left: 1px solid color-mix(in oklch, var(--bg) 25%, transparent);
+  .scope {
+    display: grid;
+    justify-items: center;
+    gap: 1.25rem;
   }
 
-  .cv a:hover {
-    background: var(--accent);
+  .scope :global(.radar) {
+    width: min(100%, 40rem, 76svh);
   }
 
-  .cv a:focus-visible {
-    outline: 2px solid var(--bg);
-    outline-offset: -4px;
-    border-radius: 999px;
+  .readout {
+    display: grid;
+    gap: 0.2rem;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    text-align: center;
   }
 
-  .note {
-    opacity: 0.65;
-    font-weight: 400;
+  .readout time {
+    color: var(--ink);
   }
 
   @media (max-width: 30rem) {
-    .coords {
-      display: none;
+    .actions .btn {
+      flex: 1 1 100%;
     }
   }
 </style>

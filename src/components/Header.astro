@@ -6,21 +6,34 @@ import { pathFor, useT, type Lang } from "@/i18n/ui";
 
 interface Props {
   lang: Lang;
+  /** Sobre el cielo del radar: posición absoluta y colores claros. */
+  over?: boolean;
+  /** Enlaces a secciones de la portada. */
+  sections?: boolean;
 }
 
-const { lang } = Astro.props;
+const { lang, over = false, sections = false } = Astro.props;
 const { t } = useT(lang);
 const other: Lang = lang === "es" ? "en" : "es";
 ---
 
-<header class="wrap header">
+<header class:list={["wrap header", { "header--over on-scope": over }]}>
   <a class="brand" href={pathFor(lang)} aria-label={profile.name}>
     <Logo class="mark" />
     <span>{profile.shortName}</span>
   </a>
 
-  <nav class="actions">
-    <a class="lang mono" href={pathFor(other)} hreflang={other} lang={other} data-lang={other}>
+  <nav class="actions" aria-label={t("navLabel")}>
+    {
+      sections && (
+        <ul class="sections" role="list">
+          <li><a href="#proyectos">{t("projectsTitle")}</a></li>
+          <li><a href="#trayectoria">{t("pathTitle")}</a></li>
+          <li><a href="#contacto">{t("contactNav")}</a></li>
+        </ul>
+      )
+    }
+    <a class="lang data" href={pathFor(other)} hreflang={other} lang={other} data-lang={other}>
       <span class="sr-only">{t("switchLang")}: </span>{other.toUpperCase()}
     </a>
     <ThemeToggle lang={lang} />
@@ -44,7 +57,13 @@ const other: Lang = lang === "es" ? "en" : "es";
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding-block: clamp(1.25rem, 3vw, 2rem);
+    padding-block: clamp(1.25rem, 3vw, 1.75rem);
+  }
+
+  .header--over {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: var(--z-header);
   }
 
   .brand {
@@ -74,6 +93,31 @@ const other: Lang = lang === "es" ? "en" : "es";
     gap: 0.5rem;
   }
 
+  .sections {
+    display: none;
+    gap: 1.75rem;
+    margin-right: 1.25rem;
+    padding: 0;
+    list-style: none;
+    font-size: var(--step--1);
+  }
+
+  .sections a {
+    color: var(--ink-2);
+    text-decoration: none;
+    transition: color 0.2s var(--ease-out);
+  }
+
+  .sections a:hover {
+    color: var(--ink);
+  }
+
+  @media (min-width: 48rem) {
+    .sections {
+      display: flex;
+    }
+  }
+
   .lang {
     display: inline-flex;
     align-items: center;
@@ -83,9 +127,9 @@ const other: Lang = lang === "es" ? "en" : "es";
     border-radius: 999px;
     color: var(--ink-2);
     font-size: var(--step--1);
-    font-weight: 600;
     text-decoration: none;
     transition:
+      color 0.2s var(--ease-out),
       border-color 0.2s var(--ease-out),
       background-color 0.2s var(--ease-out);
   }

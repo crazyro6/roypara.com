@@ -8,79 +8,136 @@ interface Props {
   lang: Lang;
   id: string;
   title: string;
-  items: TimelineItem[];
+  // Experiencia, formación, certificaciones… en una sola sección.
+  groups: { label: string; items: TimelineItem[] }[];
 }
 
-const { lang, id, title, items } = Astro.props;
+const { lang, id, title } = Astro.props;
+const groups = Astro.props.groups.filter((g) => g.items.length > 0);
 const { t, tr } = useT(lang);
-const inPublic = (file: string) => existsSync(join(process.cwd(), "public", file));
+const inPublic = (file: string) =>
+  existsSync(join(process.cwd(), "public", file));
 ---
 
 {
-  items.length > 0 && (
+  groups.length > 0 && (
     <section class="section" id={id} aria-labelledby={`${id}-title`}>
       <h2 id={`${id}-title`} class="section-title">
         {title}
       </h2>
 
-      <ol class="timeline" role="list">
-        {items.map((e) => (
-          <li class="item">
-            <p class="period mono">{tr(e.period)}</p>
-            <div>
-              <h3 class="title">{tr(e.title)}</h3>
-              <p class="place">
-                {e.placeUrl ? (
-                  <a class="link" href={e.placeUrl} target="_blank" rel="noopener">
-                    {e.place}
-                  </a>
-                ) : (
-                  e.place
-                )}
-              </p>
-              <p class="note">{tr(e.note)}</p>
-              {e.file && inPublic(e.file) && (
-                <p class="file">
-                  <a class="link" href={e.file} target="_blank" rel="noopener">
-                    {t("viewCertificate")}
-                    <span class="sr-only">: {tr(e.title)}</span>
-                    <span class="arrow" aria-hidden="true">
-                      ↗
-                    </span>
-                  </a>
-                </p>
-              )}
-            </div>
-          </li>
+      <div class="groups">
+        {groups.map((g) => (
+          <div class="group">
+            <h3 class="label">{g.label}</h3>
+            <ol class="timeline" role="list">
+              {g.items.map((e) => (
+                <li class="item">
+                  <p class="period data">{tr(e.period)}</p>
+                  <div>
+                    <h4 class="title">{tr(e.title)}</h4>
+                    <p class="place">
+                      {e.placeUrl ? (
+                        <a
+                          class="link"
+                          href={e.placeUrl}
+                          target="_blank"
+                          rel="noopener"
+                        >
+                          {e.place}
+                        </a>
+                      ) : (
+                        e.place
+                      )}
+                    </p>
+                    <p class="note">{tr(e.note)}</p>
+                    {e.file && inPublic(e.file) && (
+                      <p class="file">
+                        <a
+                          class="link"
+                          href={e.file}
+                          target="_blank"
+                          rel="noopener"
+                        >
+                          {t("viewCertificate")}
+                          <span class="sr-only">: {tr(e.title)}</span>
+                          <span class="arrow" aria-hidden="true">
+                            ↗
+                          </span>
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
         ))}
-      </ol>
+      </div>
     </section>
   )
 }
 
 <style>
-  .timeline {
+  .groups {
     display: grid;
-    gap: 1.75rem;
-    padding: 0;
+    gap: 2.5rem;
+  }
+
+  .label {
+    margin-bottom: 1rem;
+    color: var(--ink-3);
+    font-size: var(--step--1);
+    font-weight: 500;
+  }
+
+  /* Un carril vertical con un punto por etapa, como una ruta de vuelo. */
+  .timeline {
+    position: relative;
+    display: grid;
+    gap: 1.5rem;
+    padding: 0 0 0 1.5rem;
     list-style: none;
   }
 
+  .timeline::before {
+    content: "";
+    position: absolute;
+    left: 0.25rem;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 1px;
+    background: var(--line);
+  }
+
   .item {
+    position: relative;
     display: grid;
-    grid-template-columns: 9.5rem 1fr;
+    grid-template-columns: 9rem minmax(0, 1fr);
     gap: 0.25rem 1.5rem;
   }
 
+  .item::before {
+    content: "";
+    position: absolute;
+    left: -1.5rem;
+    top: 0.45em;
+    width: 0.5625rem;
+    height: 0.5625rem;
+    border: 2px solid var(--accent);
+    border-radius: 999px;
+    background: var(--bg);
+  }
+
   .period {
-    padding-top: 0.15em;
+    padding-top: 0.1em;
     color: var(--ink-3);
     font-size: var(--step--1);
   }
 
   .title {
-    font-size: var(--step-0);
-    font-weight: 650;
+    font-size: var(--step-1);
+    letter-spacing: -0.01em;
   }
 
   .place {
@@ -96,13 +153,12 @@ const inPublic = (file: string) => existsSync(join(process.cwd(), "public", file
 
   .file {
     margin-top: 0.5rem;
-    color: var(--ink-2);
     font-size: var(--step--1);
   }
 
   @media (max-width: 36rem) {
     .item {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 </style>

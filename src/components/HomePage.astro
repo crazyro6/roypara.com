@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import Header from "./Header.astro";
 import Hero from "./Hero.astro";
 import Projects from "./Projects.astro";
+import Now from "./Now.astro";
 import Timeline from "./Timeline.astro";
 import Stack from "./Stack.astro";
 import GithubCalendar from "./GithubCalendar.astro";
@@ -20,29 +21,26 @@ const { t } = useT(lang);
 ---
 
 <Layout lang={lang} autoLang={lang === "es"}>
-  <Header lang={lang} />
-  <main id="main" class="wrap">
+  <Header lang={lang} over sections />
+  <main id="main">
     <Hero lang={lang} />
-    <Projects lang={lang} />
-    <Timeline lang={lang} id="experiencia" title={t("experienceTitle")} items={experience} />
-    <Timeline lang={lang} id="formacion" title={t("educationTitle")} items={education} />
-    <Timeline lang={lang} id="certificaciones" title={t("certificationsTitle")} items={certifications} />
-    <Stack lang={lang} />
-    {profile.showGithubCalendar && <GithubCalendar lang={lang} />}
+    <div class="wrap">
+      <Projects lang={lang} />
+      <Now lang={lang} />
+      <Timeline
+        lang={lang}
+        id="trayectoria"
+        title={t("pathTitle")}
+        groups={[
+          { label: t("experienceTitle"), items: experience },
+          { label: t("educationTitle"), items: education },
+          { label: t("certificationsTitle"), items: certifications },
+        ]}
+      />
+      <Stack lang={lang} />
+      {profile.showGithubCalendar && <GithubCalendar lang={lang} />}
+    </div>
     <Contact lang={lang} />
   </main>
   <Footer lang={lang} />
 </Layout>
-
-<script>
-  // Posición del cursor dentro de cada tarjeta para el brillo del hover.
-  if (matchMedia("(hover: hover) and (pointer: fine)").matches) {
-    document.querySelectorAll<HTMLElement>(".section").forEach((el) => {
-      el.addEventListener("pointermove", (e) => {
-        const r = el.getBoundingClientRect();
-        el.style.setProperty("--mx", `${e.clientX - r.left}px`);
-        el.style.setProperty("--my", `${e.clientY - r.top}px`);
-      });
-    });
-  }
-</script>

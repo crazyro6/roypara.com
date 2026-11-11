@@ -11,24 +11,39 @@ export const profile = {
     en: "Full-stack developer in training",
   } satisfies T,
   location: "Vecindario, Gran Canaria",
-  // Se muestran junto a la hora local, un guiño al radar ADS-B.
   coordinates: "27°50′N 15°26′W",
+  // Centro del radar si flights.json no trae el del receptor.
+  radarCenter: [27.84, -15.44] as [number, number],
   timeZone: "Atlantic/Canary",
-  // null oculta el indicador de estado.
-  status: {
-    es: "Abierto a prácticas y primer empleo",
-    en: "Open to internships and junior roles",
-  } satisfies T | null,
-  bio: [
+  // Presentación de la portada, en primera persona.
+  intro: [
     {
-      es: "Soy Roy, estudiante de Desarrollo de Aplicaciones Multiplataforma en Gran Canaria. Me gusta construir herramientas que convierten datos en algo que se entiende de un vistazo: desde un radar de aviones casero con una Raspberry Pi hasta un panel en vivo para Rocket League.",
-      en: "I'm Roy, a Multiplatform Application Development student based in Gran Canaria. I like building tools that turn raw data into something you can read at a glance, from a home-built aircraft radar running on a Raspberry Pi to a live dashboard for Rocket League.",
+      es: "Estudio Desarrollo de Aplicaciones Multiplataforma y busco mis primeras prácticas o un primer empleo como desarrollador.",
+      en: "I'm studying Multiplatform Application Development and looking for my first internship or junior developer role.",
     },
     {
-      es: "Programo sobre todo en Java y JavaScript, y estoy buscando mi primera oportunidad en un equipo donde seguir creciendo como desarrollador full-stack.",
-      en: "I mostly write Java and JavaScript, and I'm looking for my first role on a team where I can keep growing as a full-stack developer.",
+      es: "Me gusta construir cosas que leen datos de verdad, como un radar de aviones con una Raspberry Pi o un panel en vivo para Rocket League.",
+      en: "I like building things that read real-world data, like an aircraft radar on a Raspberry Pi or a live dashboard for Rocket League.",
     },
   ] satisfies T[],
+  // Bloque «Ahora». Cámbialo cuando cambie algo y actualiza la fecha.
+  now: {
+    updated: { es: "noviembre de 2026", en: "November 2026" } satisfies T,
+    items: [
+      {
+        es: "Estudiando DAM en el IES Lomo de la Herradura.",
+        en: "Studying Multiplatform App Development at IES Lomo de la Herradura.",
+      },
+      {
+        es: "Buscando prácticas o mi primer empleo, en Gran Canaria o en remoto.",
+        en: "Looking for an internship or my first job, in Gran Canaria or remote.",
+      },
+      {
+        es: "Conectando el radar a esta web para que enseñe los vuelos que capta mi antena.",
+        en: "Wiring the radar into this site so it shows the flights my antenna picks up.",
+      },
+    ] satisfies T[],
+  },
   email: "roypara@icloud.com",
   // Teléfono en la sección de contacto; null lo oculta.
   phone: "+34 611 146 257" as string | null,
@@ -60,6 +75,11 @@ export type Project = {
   stack: string[];
   repo?: string;
   demo?: string;
+  // Foto o captura: guárdala en src/assets/ e impórtala arriba,
+  // p. ej. `import radar from "@/assets/radar.jpg"` → `image: radar`.
+  image?: ImageMetadata;
+  // Describe la foto; mientras no hay foto, en local sale como recordatorio.
+  imageAlt: T;
 };
 
 export const projects: Project[] = [
@@ -71,6 +91,10 @@ export const projects: Project[] = [
       en: "Real-time dashboard fed by the game's local Stats API: live scoreboard, every player's rank and MMR, session history and an event feed. Installs as a PWA and starts with Windows.",
     },
     stack: ["React", "Vite", "Node.js", "PWA"],
+    imageAlt: {
+      es: "El panel en un segundo monitor durante una partida: marcador, rangos y MMR de los seis jugadores",
+      en: "The dashboard on a second monitor mid-match: scoreboard, ranks and MMR for all six players",
+    },
     repo: "https://github.com/crazyro6/Rocket-League-Live-Dashboard",
   },
   {
@@ -81,6 +105,10 @@ export const projects: Project[] = [
       en: "Front end for my own ADS-B receiver (Raspberry Pi + RTL-SDR). It reads dump1090's live feed and cross-references HexDB and Planespotters to show the registration, route and photo of every aircraft flying over the island.",
     },
     stack: ["React", "Vite", "CSS Grid", "Raspberry Pi"],
+    imageAlt: {
+      es: "La Raspberry Pi con el receptor RTL-SDR y la antena junto a la ventana",
+      en: "The Raspberry Pi with the RTL-SDR receiver and the antenna by the window",
+    },
     repo: "https://github.com/crazyro6/Fronted-Feeder-FR24",
   },
 ];

@@ -1,0 +1,53 @@
+---
+import { profile } from "@/data/profile";
+import { useT, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { t, tr } = useT(lang);
+---
+
+<section class="section" id="ahora" aria-labelledby="now-title">
+  <h2 id="now-title" class="section-title">{t("nowTitle")}</h2>
+  <ul class="list" role="list">
+    {profile.now.items.map((item) => <li>{tr(item)}</li>)}
+  </ul>
+  <p class="updated">{t("nowUpdated", { date: tr(profile.now.updated) })}</p>
+</section>
+
+<style>
+  .list {
+    display: grid;
+    gap: 0.6rem;
+    padding: 0;
+    list-style: none;
+    font-size: var(--step-1);
+    line-height: 1.45;
+  }
+
+  /* Viñeta: una pequeña traza, como en el radar. */
+  .list li {
+    position: relative;
+    padding-left: 1.5rem;
+  }
+
+  .list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.72em;
+    width: 0.8rem;
+    height: 1.5px;
+    border-radius: 1px;
+    background: var(--accent);
+  }
+
+  .updated {
+    margin-top: 1.25rem;
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+</style>

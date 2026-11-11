@@ -46,7 +46,7 @@ const { t } = useT(Astro.props.lang);
     );
     document
       .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
-      .forEach((m) => (m.content = isDark ? "#111519" : "#ffffff"));
+      .forEach((m) => (m.content = isDark ? "#0c1117" : "#ffffff"));
   };
 
   const apply = (theme: "light" | "dark") => {

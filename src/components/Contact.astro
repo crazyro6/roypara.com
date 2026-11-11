@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro:assets";
+import photo from "@/assets/roy.png";
 import { profile } from "@/data/profile";
 import { useT, type Lang } from "@/i18n/ui";
 
@@ -9,68 +11,172 @@ interface Props {
 const { lang } = Astro.props;
 const { t } = useT(lang);
 
-const ways = [{ text: profile.email, href: `mailto:${profile.email}`, copyLabel: t("copyEmail") }];
+const ways = [
+  {
+    text: profile.email,
+    href: `mailto:${profile.email}`,
+    copyLabel: t("copyEmail"),
+  },
+];
 if (profile.phone) {
-  ways.push({ text: profile.phone, href: `tel:${profile.phone.replace(/\s/g, "")}`, copyLabel: t("copyPhone") });
+  ways.push({
+    text: profile.phone,
+    href: `tel:${profile.phone.replace(/\s/g, "")}`,
+    copyLabel: t("copyPhone"),
+  });
 }
 ---
 
-<section class="section" id="contacto" aria-labelledby="contact-title">
-  <h2 id="contact-title" class="section-title">{t("contactTitle")}</h2>
-  <p class="text muted">{t("contactText")}</p>
+<section class="closing on-scope" id="contacto" aria-labelledby="contact-title">
+  <svg class="rings" viewBox="-100 -100 200 200" aria-hidden="true">
+    {[25, 50, 75, 100].map((r) => <circle r={r} />)}
+    <line x1="-100" x2="100" y1="0" y2="0"></line>
+    <line y1="-100" y2="100" x1="0" x2="0"></line>
+  </svg>
+  <div class="grain layer" aria-hidden="true"></div>
 
-  <ul class="ways" role="list">
-    {
-      ways.map((w) => (
-        <li class="way">
-          <a class="address mono" href={w.href}>
-            {w.text}
-          </a>
-          <button class="copy" type="button" data-copy={w.text} data-done={t("copied")} aria-label={w.copyLabel}>
-            <span data-copy-label>{t("copy")}</span>
-          </button>
-          <span class="sr-only" role="status" data-copy-status />
-        </li>
-      ))
-    }
-  </ul>
+  <div class="wrap inner">
+    <div class="note">
+      <Image
+        class="photo"
+        src={photo}
+        alt={t("photoAlt")}
+        width={88}
+        height={88}
+        densities={[1, 2]}
+      />
+      <h2 id="contact-title" class="title">{t("contactTitle")}</h2>
+      <p class="text">{t("contactText")}</p>
+    </div>
+
+    <ul class="ways" role="list">
+      {
+        ways.map((w) => (
+          <li class="way">
+            <a class="address" href={w.href}>
+              {w.text}
+            </a>
+            <button
+              class="copy"
+              type="button"
+              data-copy={w.text}
+              data-done={t("copied")}
+              aria-label={w.copyLabel}
+            >
+              <span data-copy-label>{t("copy")}</span>
+            </button>
+            <span class="sr-only" role="status" data-copy-status />
+          </li>
+        ))
+      }
+    </ul>
+  </div>
 </section>
 
 <script>
-  document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
-    const label = button.querySelector<HTMLElement>("[data-copy-label]")!;
-    const status = button.parentElement?.querySelector<HTMLElement>("[data-copy-status]");
-    const original = label.textContent;
-    let timer: number | undefined;
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-copy]")
+    .forEach((button) => {
+      const label = button.querySelector<HTMLElement>("[data-copy-label]")!;
+      const status =
+        button.parentElement?.querySelector<HTMLElement>("[data-copy-status]");
+      const original = label.textContent;
+      let timer: number | undefined;
 
-    button.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(button.dataset.copy ?? "");
-      } catch {
-        return;
-      }
-      label.textContent = button.dataset.done ?? "";
-      button.dataset.state = "done";
-      if (status) status.textContent = button.dataset.done ?? "";
-      clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        label.textContent = original;
-        delete button.dataset.state;
-        if (status) status.textContent = "";
-      }, 2000);
+      button.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(button.dataset.copy ?? "");
+        } catch {
+          return;
+        }
+        label.textContent = button.dataset.done ?? "";
+        button.dataset.state = "done";
+        if (status) status.textContent = button.dataset.done ?? "";
+        clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          label.textContent = original;
+          delete button.dataset.state;
+          if (status) status.textContent = "";
+        }, 2000);
+      });
     });
-  });
 </script>
 
 <style>
+  .closing {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    margin-top: clamp(5rem, 4rem + 5vw, 9rem);
+    padding-block: clamp(4.5rem, 3.5rem + 5vw, 8rem)
+      clamp(3rem, 2rem + 3vw, 5rem);
+    background:
+      radial-gradient(
+        50rem 40rem at 85% 60%,
+        color-mix(in oklch, var(--scope-glow) 60%, transparent),
+        transparent 70%
+      ),
+      var(--scope);
+  }
+
+  .layer {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+
+  /* Eco del radar de arriba, quieto. */
+  .rings {
+    position: absolute;
+    z-index: -1;
+    right: -12rem;
+    top: 50%;
+    width: 44rem;
+    translate: 0 -50%;
+    fill: none;
+    stroke: var(--scope-line);
+    stroke-width: 1;
+    overflow: visible;
+  }
+
+  .rings * {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .inner {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  .note {
+    display: grid;
+    gap: 1rem;
+    max-width: 38rem;
+  }
+
+  .photo {
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 999px;
+    object-fit: cover;
+    box-shadow: 0 0 0 4px oklch(1 0 0 / 0.08);
+  }
+
+  .title {
+    margin-top: 0.5rem;
+    font-size: var(--step-3);
+    letter-spacing: -0.035em;
+  }
+
   .text {
-    max-width: 52ch;
+    color: var(--ink-2);
+    font-size: var(--step-1);
+    line-height: 1.5;
   }
 
   .ways {
     display: grid;
-    gap: 0.85rem;
-    margin-top: 1.5rem;
+    gap: 0.75rem;
     padding: 0;
     list-style: none;
   }
@@ -79,20 +185,22 @@ if (profile.phone) {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem 1rem;
   }
 
   .address {
     color: var(--ink);
-    font-size: var(--step-1);
+    font-size: var(--step-2);
+    font-weight: 500;
+    letter-spacing: -0.02em;
     text-decoration: underline;
-    text-decoration-color: color-mix(in oklch, var(--accent) 55%, transparent);
+    text-decoration-color: color-mix(in oklch, var(--accent) 50%, transparent);
     text-decoration-thickness: 1px;
-    text-underline-offset: 0.25em;
+    text-underline-offset: 0.2em;
+    overflow-wrap: anywhere;
     transition:
       color 0.25s var(--ease-out),
       text-decoration-color 0.25s var(--ease-out);
-    overflow-wrap: anywhere;
   }
 
   .address:hover {
@@ -102,7 +210,8 @@ if (profile.phone) {
 
   .copy {
     min-width: 5.5rem;
-    padding: 0.3rem 0.8rem;
+    min-height: 2.25rem;
+    padding: 0.3rem 0.9rem;
     border: 1px solid var(--line);
     border-radius: 999px;
     background: transparent;
@@ -123,6 +232,14 @@ if (profile.phone) {
 
   .copy[data-state="done"] {
     color: var(--ink);
-    border-color: var(--live);
+    border-color: var(--accent);
+  }
+
+  @media (max-width: 40rem) {
+    .rings {
+      right: -16rem;
+      width: 30rem;
+      opacity: 0.6;
+    }
   }
 </style>

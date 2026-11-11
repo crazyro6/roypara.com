@@ -1,46 +1,76 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
+import Radar from "@/components/Radar.astro";
 import { profile } from "@/data/profile";
+import { plot } from "@/lib/flights";
 import { useT } from "@/i18n/ui";
 
 // Página única y bilingüe: Cloudflare la sirve para cualquier ruta inexistente.
 const es = useT("es").t;
 const en = useT("en").t;
+const empty = plot(undefined, profile.radarCenter);
 ---
 
 <Layout lang="es" title={`404 · ${profile.name}`} noindex>
-  <Header lang="es" />
-  <main id="main" class="wrap notfound">
-    <p class="code mono rise">404</p>
-    <h1 class="rise" style="--i:1">{es("notFoundTitle")}</h1>
-    <p class="muted rise" style="--i:2">
-      {es("notFoundText")} <span lang="en">{en("notFoundText")}</span>
-    </p>
-    <p class="rise" style="--i:3">
-      <a class="link" href="/">{es("backHome")}</a>
-      <span class="sep" aria-hidden="true">·</span>
-      <a class="link" href="/en/" lang="en">{en("backHome")}</a>
-    </p>
+  <Header lang="es" over />
+  <main id="main" class="notfound on-scope">
+    <div class="wrap inner">
+      <div class="copy">
+        <p class="code data rise">404</p>
+        <h1 class="rise" style="--i:1">{es("notFoundTitle")}</h1>
+        <p class="text rise" style="--i:2">
+          {es("notFoundText")} <span lang="en">{en("notFoundText")}</span>
+        </p>
+        <p class="actions rise" style="--i:3">
+          <a class="btn btn--fill" href="/">{es("backHome")}</a>
+          <a class="btn btn--line" href="/en/" lang="en">{en("backHome")}</a>
+        </p>
+      </div>
+      <div class="scope rise" style="--i:2">
+        <Radar radar={empty} />
+      </div>
+    </div>
   </main>
 </Layout>
 
 <style>
   .notfound {
     display: grid;
-    gap: 1rem;
-    padding-top: clamp(4rem, 10vw, 8rem);
-    padding-bottom: 6rem;
+    align-items: center;
+    min-height: 100svh;
+    padding-block: 6rem 3rem;
+    background:
+      radial-gradient(50rem 40rem at 72% 50%, color-mix(in oklch, var(--scope-glow) 70%, transparent), transparent 70%),
+      var(--scope);
+  }
+
+  .inner {
+    display: grid;
+    gap: 3rem;
+    align-items: center;
+  }
+
+  @media (min-width: 52rem) {
+    .inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
   }
 
   .code {
     color: var(--accent);
-    font-size: var(--step-1);
   }
 
   h1 {
+    margin-top: 0.75rem;
     font-size: var(--step-3);
-    letter-spacing: -0.025em;
+    letter-spacing: -0.035em;
+  }
+
+  .text {
+    margin-top: 1rem;
+    color: var(--ink-2);
+    font-size: var(--step-1);
   }
 
   span[lang="en"] {
@@ -48,8 +78,15 @@ const en = useT("en").t;
     color: var(--ink-3);
   }
 
-  .sep {
-    margin-inline: 0.6rem;
-    color: var(--ink-3);
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .scope {
+    justify-self: center;
+    width: min(100%, 28rem);
   }
 </style>

@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 import { profile, projects } from "@/data/profile";
 import { useT, type Lang } from "@/i18n/ui";
 
@@ -10,52 +11,74 @@ const { lang } = Astro.props;
 const { t, tr } = useT(lang);
 ---
 
-<section class="section" id="proyectos" aria-labelledby="projects-title">
-  <h2 id="projects-title" class="section-title">{t("projectsTitle")}</h2>
-  <p class="intro muted">{t("projectsIntro")}</p>
+<section class="section section--stack" id="proyectos" aria-labelledby="projects-title">
+  <div class="head">
+    <h2 id="projects-title" class="section-title">{t("projectsTitle")}</h2>
+    <p class="muted">{t("projectsIntro")}</p>
+  </div>
 
-  <ul class="list" role="list">
+  <ul class="grid" role="list">
     {
       projects.map((p) => {
         const main = p.demo ?? p.repo;
         return (
-          <li class="project">
-            <div class="head">
-              <h3 class="name">
-                {main ? (
-                  <a class="stretched" href={main} target="_blank" rel="noopener">
-                    {p.name}
-                  </a>
-                ) : (
-                  p.name
-                )}
-              </h3>
-              <span class="year mono">{p.year}</span>
-            </div>
-            <p class="desc">{tr(p.description)}</p>
-            <div class="foot">
-              <p class="stack mono">
-                <span class="sr-only">Stack: </span>
-                {p.stack.join(" · ")}
-              </p>
-              <p class="actions">
-                {p.repo && (
-                  <a class="link" href={p.repo} target="_blank" rel="noopener">
-                    {t("code")}
-                    <span class="arrow" aria-hidden="true">
-                      ↗
-                    </span>
-                  </a>
-                )}
-                {p.demo && (
-                  <a class="link" href={p.demo} target="_blank" rel="noopener">
-                    {t("demo")}
-                    <span class="arrow" aria-hidden="true">
-                      ↗
-                    </span>
-                  </a>
-                )}
-              </p>
+          <li class="card project">
+            {p.image ? (
+              <div class="frame">
+                <Image
+                  src={p.image}
+                  alt={tr(p.imageAlt)}
+                  widths={[560, 1120]}
+                  sizes="(min-width: 60rem) 34rem, 100vw"
+                />
+              </div>
+            ) : (
+              import.meta.env.DEV && (
+                <div class="frame pending" aria-hidden="true">
+                  <span>
+                    {t("photoPending")}: {tr(p.imageAlt)}
+                  </span>
+                </div>
+              )
+            )}
+            <div class="body">
+              <div class="title-row">
+                <h3 class="name">
+                  {main ? (
+                    <a class="stretched" href={main} target="_blank" rel="noopener">
+                      {p.name}
+                    </a>
+                  ) : (
+                    p.name
+                  )}
+                </h3>
+                <span class="year data">{p.year}</span>
+              </div>
+              <p class="desc">{tr(p.description)}</p>
+              <div class="foot">
+                <p class="stack data">
+                  <span class="sr-only">Stack: </span>
+                  {p.stack.join(" · ")}
+                </p>
+                <p class="links">
+                  {p.repo && (
+                    <a class="link" href={p.repo} target="_blank" rel="noopener">
+                      {t("code")}
+                      <span class="arrow" aria-hidden="true">
+                        ↗
+                      </span>
+                    </a>
+                  )}
+                  {p.demo && (
+                    <a class="link" href={p.demo} target="_blank" rel="noopener">
+                      {t("demo")}
+                      <span class="arrow" aria-hidden="true">
+                        ↗
+                      </span>
+                    </a>
+                  )}
+                </p>
+              </div>
             </div>
           </li>
         );
@@ -64,37 +87,82 @@ const { t, tr } = useT(lang);
   </ul>
 
   <a class="more link" href={profile.links.github} target="_blank" rel="noopener">
-    {t("moreOnGithub")}
-    <span class="arrow" aria-hidden="true">↗</span>
+    {t("moreOnGithub")}<span class="arrow" aria-hidden="true">↗</span>
   </a>
 </section>
 
 <style>
-  .intro {
-    margin-top: -0.75rem;
-    margin-bottom: 1.75rem;
+  .section--stack {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .list {
+  .section--stack > * {
+    grid-column: 1;
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 2rem;
+  }
+
+  .head .section-title {
+    font-size: var(--step-3);
+    letter-spacing: -0.03em;
+  }
+
+  .grid {
     display: grid;
-    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
     padding: 0;
-    margin-inline: -1rem;
     list-style: none;
   }
 
   .project {
-    position: relative;
-    padding: 1.1rem 1rem 1.2rem;
-    border-radius: 0.75rem;
-    transition: background-color 0.3s var(--ease-out);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
-  .project:hover {
+  .frame {
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
     background: var(--surface);
   }
 
-  .head {
+  .frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s var(--ease-out);
+  }
+
+  .project:hover .frame img {
+    transform: scale(1.03);
+  }
+
+  /* Hueco de foto: solo en local, como recordatorio. */
+  .pending {
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    color: var(--ink-3);
+    font-size: var(--step--1);
+    text-align: center;
+  }
+
+  .body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  }
+
+  .title-row {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
@@ -102,16 +170,17 @@ const { t, tr } = useT(lang);
   }
 
   .name {
-    font-size: var(--step-0);
-    font-weight: 650;
+    font-size: var(--step-2);
+    letter-spacing: -0.02em;
   }
 
   .stretched {
     color: inherit;
     text-decoration: none;
+    transition: color 0.25s var(--ease-out);
   }
 
-  /* Toda la fila es clicable, sin anidar enlaces. */
+  /* Toda la tarjeta es clicable, sin anidar enlaces. */
   .stretched::after {
     content: "";
     position: absolute;
@@ -125,7 +194,7 @@ const { t, tr } = useT(lang);
 
   .stretched:focus-visible::after {
     outline: 2px solid var(--accent);
-    outline-offset: 2px;
+    outline-offset: -3px;
   }
 
   .project:hover .stretched {
@@ -133,15 +202,14 @@ const { t, tr } = useT(lang);
   }
 
   .year {
+    flex: none;
     color: var(--ink-3);
     font-size: var(--step--1);
-    flex: none;
   }
 
   .desc {
-    margin-top: 0.4rem;
+    margin-top: 0.75rem;
     color: var(--ink-2);
-    max-width: 62ch;
   }
 
   .foot {
@@ -150,7 +218,8 @@ const { t, tr } = useT(lang);
     align-items: baseline;
     justify-content: space-between;
     gap: 0.5rem 1.5rem;
-    margin-top: 0.85rem;
+    margin-top: auto;
+    padding-top: 1.25rem;
     font-size: var(--step--1);
   }
 
@@ -158,21 +227,20 @@ const { t, tr } = useT(lang);
     color: var(--ink-3);
   }
 
-  .actions {
+  .links {
     display: flex;
     gap: 1.25rem;
   }
 
-  /* Los enlaces secundarios quedan por encima del enlace de la fila. */
-  .actions a {
+  /* Los enlaces secundarios quedan por encima del enlace de la tarjeta. */
+  .links a {
     position: relative;
     z-index: 1;
   }
 
   .more {
-    display: inline-block;
-    margin-top: 1.25rem;
-    font-size: var(--step--1);
+    justify-self: start;
     color: var(--ink-2);
+    font-size: var(--step--1);
   }
 </style>

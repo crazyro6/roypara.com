@@ -102,7 +102,7 @@ if (data) {
             {t("contributions", { n: data.total })}
           </a>
         </p>
-        <p class="legend mono" aria-hidden="true">
+        <p class="legend data" aria-hidden="true">
           {t("less")}
           {[0, 1, 2, 3, 4].map((l) => (
             <svg width={CELL} height={CELL}>
@@ -135,7 +135,7 @@ if (data) {
     direction: ltr;
     text-anchor: start;
     fill: var(--ink-3);
-    font-family: var(--font-mono);
+    font-family: var(--font-data);
     font-size: 9px;
   }
 

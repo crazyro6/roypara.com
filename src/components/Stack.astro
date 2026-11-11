@@ -18,13 +18,7 @@ const { t, tr } = useT(lang);
       stack.map((g) => (
         <div class="group">
           <dt class="label">{tr(g.group)}</dt>
-          <dd>
-            <ul class="chips" role="list">
-              {g.items.map((item) => (
-                <li class="chip">{item}</li>
-              ))}
-            </ul>
-          </dd>
+          <dd>{g.items.join(", ")}</dd>
         </div>
       ))
     }
@@ -35,7 +29,7 @@ const { t, tr } = useT(lang);
           {
             languages.map((l) => (
               <li>
-                {tr(l.name)} <span class="mono level">{tr(l.level)}</span>
+                {tr(l.name)} <span class="data level">{tr(l.level)}</span>
               </li>
             ))
           }
@@ -48,14 +42,16 @@ const { t, tr } = useT(lang);
 <style>
   .groups {
     display: grid;
-    gap: 1.1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: 1.75rem 2.5rem;
   }
 
   .group {
     display: grid;
-    grid-template-columns: 9.5rem 1fr;
-    align-items: baseline;
-    gap: 0.5rem 1.5rem;
+    align-content: start;
+    gap: 0.4rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
   }
 
   .label {
@@ -67,45 +63,16 @@ const { t, tr } = useT(lang);
     margin: 0;
   }
 
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-    padding: 0;
-    list-style: none;
-  }
-
-  .chip {
-    padding: 0.2rem 0.65rem;
-    border: 1px solid var(--line);
-    border-radius: 0.4rem;
-    background: var(--surface);
-    font-size: var(--step--1);
-    line-height: 1.5;
-    transition: border-color 0.2s var(--ease-out);
-  }
-
-  .chip:hover {
-    border-color: var(--ink-3);
-  }
-
   .langs {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem 1.5rem;
+    gap: 0.25rem 1.25rem;
     padding: 0;
     list-style: none;
-    font-size: var(--step--1);
   }
 
   .level {
-    color: var(--ink-3);
     margin-left: 0.25rem;
-  }
-
-  @media (max-width: 36rem) {
-    .group {
-      grid-template-columns: 1fr;
-    }
+    color: var(--ink-3);
   }
 </style>
