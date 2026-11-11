@@ -46,7 +46,7 @@ export function normalize(raw: unknown, center: [number, number], range: number)
     // usan en URLs de otras APIs, así que se validan aquí.
     if (typeof a.hex !== "string" || !/^[0-9a-f]{6}$/i.test(a.hex) || !num(a.lat) || !num(a.lon)) continue;
     const s = num(a.seen_pos) ? a.seen_pos : 0;
-    if (s > 20) continue; // la página los desvanece a los 20 s sin lectura
+    if (s > 60) continue; // más de un minuto sin posición: se da por perdido (dump1090 hace algo parecido)
     const [x, y] = xy(center, a.lat, a.lon);
     if (Math.hypot(x, y) > range) continue;
 

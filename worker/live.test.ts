@@ -12,7 +12,8 @@ const raw = {
     { hex: "zzzzzz", lat: 27.9, lon: -15.4 }, // hex inválido
     { hex: "111111", lat: 40, lon: -3 }, // fuera de alcance
     { hex: "222222", lat: 27.9, lon: -15.4, seen_pos: 99 }, // posición vieja
-    { hex: "555555", lat: 27.9, lon: -15.4, seen_pos: 25 }, // sin lectura hace 25 s: fuera
+    { hex: "555555", lat: 27.9, lon: -15.4, seen_pos: 65 }, // sin lectura hace más de un minuto: fuera
+    { hex: "777777", lat: 27.9, lon: -15.4, seen_pos: 25 }, // 25 s sin posición es normal con una antena casera: se queda
     { hex: "666666", lat: 27.9, lon: -15.4, speed: 450, track: 90 }, // dump1090 antiguo: speed en vez de gs
     { hex: "333333", flight: "<script>", lat: 27.9, lon: -15.4 }, // indicativo raro
     { hex: "444444" }, // sin posición
@@ -20,9 +21,9 @@ const raw = {
 };
 
 const planes = normalize(raw, center, 120);
-assert.deepEqual(planes.map((p) => p.h), ["4ca2d6", "3c743a", "666666", "333333"]);
+assert.deepEqual(planes.map((p) => p.h), ["4ca2d6", "3c743a", "777777", "666666", "333333"]);
 
-const [a, b, d, c] = planes; // d: speed antiguo, c: indicativo raro
+const [a, b, , d, c] = planes; // d: speed antiguo, c: indicativo raro
 assert.equal(a.f, "RYR5LG");
 assert.ok(Math.abs(a.x - 9.8) < 0.2 && Math.abs(a.y + 11.1) < 0.2, `posición ${a.x},${a.y}`);
 assert.equal(a.z, 10.67); // 35.000 pies

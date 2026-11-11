@@ -16,9 +16,12 @@ const PITCH_MINI = 0.95; // el mini radar, algo más cenital y con menos altura
 const ZX_MINI = 3;
 const CAM = 3.2; // distancia de la cámara, en radios del radar
 const PICK = 22; // radio en px para pulsar un avión
-const HOLD = 15; // segundos máximos de extrapolación sin lectura nueva
-const STALE = 14; // sin lectura durante tanto, el avión empieza a desvanecerse
-const FADE = 6; // y tarda esto en desaparecer
+// Con una antena casera los aviones lejanos mandan su posición cada 10-25 s, así que
+// un avión sin lectura nueva no ha desaparecido: se atenúa poco a poco.
+const HOLD = 75; // segundos máximos de extrapolación sin lectura nueva
+const DIM = 15; // desde aquí empieza a atenuarse
+const STALE = 60; // a los 60 s va a medio brillo y empieza a desvanecerse
+const FADE = 15; // y en otros 15 s desaparece
 
 type XY = [number, number];
 type State = "connecting" | "live" | "quiet" | "offline";
@@ -137,16 +140,19 @@ export function mount(root: HTMLElement) {
     return [x + pl.ox * e, y + pl.oy * e];
   }
 
-  const alpha = (pl: Plane, T: number) => {
-    const born = still ? 1 : Math.min(1, (T - pl.born) / 1.2);
-    const idle = T - pl.p.at(-1)![3] - STALE;
-    return born * (idle > 0 ? Math.max(0, 1 - idle / FADE) : 1);
+  /** Cuánto se ve según lo vieja que es su última posición: 1 (reciente) → 0,5 → 0 (perdido). */
+  const fade = (pl: Plane, T: number) => {
+    const age = T - pl.p.at(-1)![3];
+    if (age <= DIM) return 1;
+    if (age <= STALE) return 1 - (0.5 * (age - DIM)) / (STALE - DIM);
+    return 0.5 * Math.max(0, 1 - (age - STALE) / FADE);
   };
+  const entry = (pl: Plane, T: number) => (still ? 1 : Math.min(1, (T - pl.born) / 1.2));
 
   // ----------------------------------------------------- datos en directo
   let visible = true;
   let historyApplied = false;
-  const visibleCount = (T: number) => [...planes.values()].filter((pl) => alpha(pl, T) > 0.05).length;
+  const visibleCount = (T: number) => [...planes.values()].filter((pl) => fade(pl, T) > 0.02).length;
 
   // El sondeo es único para toda la página (src/lib/live.ts); aquí solo se recibe.
   const onFeed = (feed: Feed) => {
@@ -371,8 +377,12 @@ export function mount(root: HTMLElement) {
 
     heads = [];
     ctx.textAlign = "left";
+    let shownCount = 0;
     for (const pl of planes.values()) {
-      const a0 = alpha(pl, T);
+      const f = fade(pl, T);
+      if (f <= 0.02) continue;
+      shownCount++; // cuenta desde el primer fotograma, aunque todavía esté apareciendo
+      const a0 = entry(pl, T) * f;
       if (a0 <= 0.01) continue;
       const last = pl.p.at(-1)!;
       const [x, y] = display(pl, T);
@@ -439,8 +449,7 @@ export function mount(root: HTMLElement) {
     if (now - hudAt > 400) {
       hudAt = now;
       if (state === "live" || state === "quiet") {
-        const count = heads.length;
-        setState(count ? "live" : "quiet", count);
+        setState(shownCount ? "live" : "quiet", shownCount);
       }
       if (chosen) {
         const [vx, vy] = chosen.plane.v;
