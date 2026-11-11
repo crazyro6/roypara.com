@@ -1,4 +1,5 @@
 ---
+import LiveBoard from "./LiveBoard.astro";
 import { profile } from "@/data/profile";
 import { useT, type Lang } from "@/i18n/ui";
 
@@ -10,18 +11,70 @@ const { lang } = Astro.props;
 const { t, tr } = useT(lang);
 ---
 
-<section class="section" id="ahora" aria-labelledby="now-title">
-  <h2 id="now-title" class="section-title">{t("nowTitle")}</h2>
-  <ul class="list" role="list">
-    {profile.now.items.map((item) => <li>{tr(item)}</li>)}
-  </ul>
-  <p class="updated">{t("nowUpdated", { date: tr(profile.now.updated) })}</p>
+<section class="band" id="ahora" aria-labelledby="now-title">
+  <div class="wrap layout">
+    <h2 id="now-title" class="section-title">{t("nowTitle")}</h2>
+
+    <div class="now">
+      <div class="mine">
+        <ul class="list" role="list">
+          {profile.now.items.map((item) => <li>{tr(item)}</li>)}
+        </ul>
+        <p class="updated">{t("nowUpdated", { date: tr(profile.now.updated) })}</p>
+      </div>
+
+      <div class="live">
+        <svg class="rings" viewBox="-100 -100 200 200" aria-hidden="true">
+          {[25, 50, 75, 100].map((r) => <circle r={r} />)}
+          <line x1="-100" x2="100" y1="0" y2="0"></line>
+          <line y1="-100" y2="100" x1="0" x2="0"></line>
+        </svg>
+        <LiveBoard lang={lang} />
+      </div>
+    </div>
+  </div>
 </section>
 
 <style>
+  /* Banda de otro tono, de borde a borde, para romper el fondo continuo. */
+  .band {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    overflow: clip; /* los anillos se cortan en los bordes de la banda sin crear scroll */
+    margin-top: clamp(4.5rem, 3.5rem + 4vw, 7rem);
+    padding-block: clamp(3.5rem, 2.5rem + 3vw, 5rem);
+    background: var(--surface);
+  }
+
+  .layout {
+    display: grid;
+    gap: 1.5rem 3rem;
+  }
+
+  @media (min-width: 60rem) {
+    .layout {
+      grid-template-columns: 15rem minmax(0, 1fr);
+    }
+  }
+
+  .now {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  @media (min-width: 60rem) {
+    .now {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 25rem);
+      align-items: center;
+      gap: 3rem;
+    }
+  }
+
   .list {
     display: grid;
     gap: 0.6rem;
+    margin: 0;
     padding: 0;
     list-style: none;
     font-size: var(--step-1);
@@ -49,5 +102,36 @@ const { t, tr } = useT(lang);
     margin-top: 1.25rem;
     color: var(--ink-3);
     font-size: var(--step--1);
+  }
+
+  /* Los anillos del radar rodean el panel: el panel es el centro de la pantalla. */
+  .live {
+    position: relative;
+  }
+
+  .rings {
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    top: 50%;
+    width: 46rem;
+    max-width: none;
+    translate: -50% -50%;
+    fill: none;
+    stroke: var(--ink-3);
+    stroke-opacity: 0.25;
+    stroke-width: 1;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .rings * {
+    vector-effect: non-scaling-stroke;
+  }
+
+  @media (max-width: 40rem) {
+    .rings {
+      stroke-opacity: 0.16;
+    }
   }
 </style>

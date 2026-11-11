@@ -1,5 +1,6 @@
 ---
 import { Image } from "astro:assets";
+import Radar from "./Radar.astro";
 import { profile, projects } from "@/data/profile";
 import { useT, type Lang } from "@/i18n/ui";
 
@@ -11,7 +12,11 @@ const { lang } = Astro.props;
 const { t, tr } = useT(lang);
 ---
 
-<section class="section section--stack" id="proyectos" aria-labelledby="projects-title">
+<section
+  class="section section--stack"
+  id="proyectos"
+  aria-labelledby="projects-title"
+>
   <div class="head">
     <h2 id="projects-title" class="section-title">{t("projectsTitle")}</h2>
     <p class="muted">{t("projectsIntro")}</p>
@@ -32,6 +37,10 @@ const { t, tr } = useT(lang);
                   sizes="(min-width: 60rem) 34rem, 100vw"
                 />
               </div>
+            ) : p.miniRadar ? (
+              <div class="frame frame--radar">
+                <Radar lang={lang} mini label={tr(p.imageAlt)} />
+              </div>
             ) : (
               import.meta.env.DEV && (
                 <div class="frame pending" aria-hidden="true">
@@ -45,7 +54,12 @@ const { t, tr } = useT(lang);
               <div class="title-row">
                 <h3 class="name">
                   {main ? (
-                    <a class="stretched" href={main} target="_blank" rel="noopener">
+                    <a
+                      class="stretched"
+                      href={main}
+                      target="_blank"
+                      rel="noopener"
+                    >
                       {p.name}
                     </a>
                   ) : (
@@ -62,7 +76,12 @@ const { t, tr } = useT(lang);
                 </p>
                 <p class="links">
                   {p.repo && (
-                    <a class="link" href={p.repo} target="_blank" rel="noopener">
+                    <a
+                      class="link"
+                      href={p.repo}
+                      target="_blank"
+                      rel="noopener"
+                    >
                       {t("code")}
                       <span class="arrow" aria-hidden="true">
                         ↗
@@ -70,7 +89,12 @@ const { t, tr } = useT(lang);
                     </a>
                   )}
                   {p.demo && (
-                    <a class="link" href={p.demo} target="_blank" rel="noopener">
+                    <a
+                      class="link"
+                      href={p.demo}
+                      target="_blank"
+                      rel="noopener"
+                    >
                       {t("demo")}
                       <span class="arrow" aria-hidden="true">
                         ↗
@@ -86,7 +110,12 @@ const { t, tr } = useT(lang);
     }
   </ul>
 
-  <a class="more link" href={profile.links.github} target="_blank" rel="noopener">
+  <a
+    class="more link"
+    href={profile.links.github}
+    target="_blank"
+    rel="noopener"
+  >
     {t("moreOnGithub")}<span class="arrow" aria-hidden="true">↗</span>
   </a>
 </section>
@@ -129,9 +158,23 @@ const { t, tr } = useT(lang);
   }
 
   .frame {
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 4 / 3;
     overflow: hidden;
     background: var(--surface);
+  }
+
+  /* El mini radar: siempre sobre el cielo oscuro, también en tema claro. */
+  .frame--radar {
+    background: var(--scope);
+  }
+
+  .frame--radar :global(.radar) {
+    --cx: 0.5;
+    --cy: 0.6;
+    --rw: 0.46;
+    --rh: 0.9;
+    width: 100%;
+    height: 100%;
   }
 
   .frame img {

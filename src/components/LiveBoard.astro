@@ -1,0 +1,134 @@
+---
+import { htmlLang, useT, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { t } = useT(lang);
+
+// Los textos de estado los pone el script.
+const labels = {
+  connecting: t("radarConnecting"),
+  quiet: t("boardQuiet"),
+  offline: t("radarOffline"),
+};
+---
+
+<!-- Sin JavaScript no hay datos: el panel queda oculto hasta que el script lo muestra. -->
+<div class="board" data-board data-locale={htmlLang[lang]} data-labels={JSON.stringify(labels)} hidden>
+  <p class="head"><span class="dot" aria-hidden="true"></span>{t("boardTitle")}</p>
+  <div class="screen">
+    <ol class="rows" role="list" data-rows>
+      {
+        [0, 1, 2].map(() => (
+          <li class="row" data-row data-empty>
+            <span class="cs data" data-c="cs" />
+            <span class="rt data" data-c="rt" />
+            <span class="alt data" data-c="alt" />
+          </li>
+        ))
+      }
+    </ol>
+    <p class="note" role="status" data-note></p>
+  </div>
+</div>
+
+<script>
+  import { mount } from "@/lib/board";
+  document.querySelectorAll<HTMLElement>("[data-board]").forEach(mount);
+</script>
+
+<style>
+  /* Siempre un panel oscuro, como los de los aeropuertos, también en tema claro. */
+  .board {
+    position: relative;
+    padding: 1.1rem 1.25rem 1.2rem;
+    border-radius: 1rem;
+    background: var(--scope);
+    color: var(--scope-ink);
+    box-shadow:
+      0 0 0 1px oklch(1 0 0 / 0.08),
+      0 24px 50px -28px oklch(0 0 0 / 0.7);
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--scope-ink-2);
+    font-size: var(--step--1);
+  }
+
+  .dot {
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--ink-3);
+  }
+
+  .board[data-state="live"] .dot,
+  .board[data-state="quiet"] .dot {
+    background: oklch(0.8 0.17 150);
+    box-shadow: 0 0 0 3px oklch(0.8 0.17 150 / 0.22);
+  }
+
+  .board[data-state="offline"] .dot {
+    background: oklch(0.74 0.15 45);
+  }
+
+  /* Alto fijo: el panel no salta cuando cambia el número de aviones. */
+  .screen {
+    min-height: 7rem;
+    margin-top: 0.9rem;
+  }
+
+  .rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 9.5ch minmax(0, 1fr) auto;
+    gap: 0.9rem;
+    padding: 0.6rem 0;
+    border-top: 1px solid oklch(1 0 0 / 0.1);
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .row:first-child {
+    border-top: 0;
+    padding-top: 0.1rem;
+  }
+
+  .row[data-empty] {
+    visibility: hidden;
+  }
+
+  .cs {
+    color: var(--track);
+  }
+
+  .rt {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .alt {
+    color: var(--scope-ink-2);
+    white-space: nowrap;
+  }
+
+  .note {
+    margin: 0;
+    padding-top: 0.2rem;
+    color: var(--scope-ink-2);
+    font-size: var(--step--1);
+  }
+</style>

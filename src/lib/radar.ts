@@ -1,25 +1,27 @@
-// Radar 3D en directo, en canvas y sin librerías. Cada pocos segundos pide
-// a /api/aviones los aviones que capta mi antena y los dibuja sobre el mapa
+// Radar 3D en directo, en canvas y sin librerías. Recibe del sondeo común
+// (src/lib/live.ts) los aviones que capta mi antena y los dibuja sobre el mapa
 // de las islas, a su altitud, con estela y una línea hasta el suelo. Entre
 // dos lecturas se mueven por su rumbo y velocidad. La vista se inclina al
 // cargar, se gira arrastrando y, al pulsar un avión, se abre su ficha.
+// Con data-mini es la versión pequeña de la tarjeta: sin interacción ni etiquetas.
 
+import { lookup } from "./aircraft";
+import { kick, watch, type Feed, type Wire } from "./live";
 import type { Scene } from "./sky";
 
 const TRAIL = 360; // segundos de estela
 const PITCH = 1.1; // inclinación final, en radianes desde la vista cenital
 const ZX = 5; // exageración de la altitud para que se lea
+const PITCH_MINI = 0.95; // el mini radar, algo más cenital y con menos altura
+const ZX_MINI = 3;
 const CAM = 3.2; // distancia de la cámara, en radios del radar
 const PICK = 22; // radio en px para pulsar un avión
-const POLL = 5; // segundos entre lecturas
-const POLL_OFFLINE = 15; // y cuando la antena no responde
 const HOLD = 15; // segundos máximos de extrapolación sin lectura nueva
 const STALE = 14; // sin lectura durante tanto, el avión empieza a desvanecerse
 const FADE = 6; // y tarda esto en desaparecer
 
 type XY = [number, number];
 type State = "connecting" | "live" | "quiet" | "offline";
-type Wire = { h: string; f?: string; x: number; y: number; z: number; s: number; v: XY };
 type Plane = {
   h: string;
   f?: string;
@@ -43,38 +45,6 @@ export function hover(hv: number, aim: number, dt: number): number {
   return hv + (aim - hv) * (1 - Math.exp(-dt * (aim ? 14 : 5)));
 }
 
-// Ficha del avión: las mismas APIs públicas que uso en mi radar ADS-B.
-const json = (url: string) =>
-  fetch(url)
-    .then((r) => (r.ok ? r.json() : null))
-    .catch(() => null);
-const https = (url: unknown) => (typeof url === "string" && url.startsWith("https://") ? url : null);
-const lookups = new Map<string, Promise<Record<string, string | null>>>();
-const lookup = (pl: Plane) => {
-  if (!lookups.has(pl.h)) {
-    lookups.set(
-      pl.h,
-      Promise.all([
-        json(`https://hexdb.io/api/v1/aircraft/${pl.h.toUpperCase()}`),
-        pl.f ? json(`https://hexdb.io/api/v1/route/iata/${encodeURIComponent(pl.f)}`) : null,
-        json(`https://api.planespotters.net/pub/photos/hex/${pl.h}`),
-      ]).then(([ac, route, photos]) => {
-        const photo = photos?.photos?.[0];
-        return {
-          airline: ac?.RegisteredOwners || null,
-          model: ac?.Type || ac?.ICAOTypeCode || null,
-          reg: ac?.Registration || null,
-          route: typeof route?.route === "string" ? route.route.replace("-", " → ") : null,
-          photo: https(photo?.thumbnail_large?.src),
-          photoLink: https(photo?.link),
-          photographer: photo?.photographer || null,
-        };
-      }),
-    );
-  }
-  return lookups.get(pl.h)!;
-};
-
 export function mount(root: HTMLElement) {
   const canvas = root.querySelector("canvas")!;
   const ctx = canvas.getContext("2d")!;
@@ -83,6 +53,7 @@ export function mount(root: HTMLElement) {
   );
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const locale = root.dataset.locale;
+  const mini = root.hasAttribute("data-mini");
 
   const stage = root.closest<HTMLElement>("section, main") ?? root;
   const statusEl = stage.querySelector<HTMLElement>("[data-radar-status]");
@@ -172,49 +143,29 @@ export function mount(root: HTMLElement) {
     return born * (idle > 0 ? Math.max(0, 1 - idle / FADE) : 1);
   };
 
-  // --------------------------------------------------------------- sondeo
-  let failures = 0;
-  let busy = false;
-  let timer: number | undefined;
+  // ----------------------------------------------------- datos en directo
   let visible = true;
-
-  const poll = async () => {
-    clearTimeout(timer);
-    timer = undefined;
-    if (busy) return;
-    busy = true;
-    try {
-      const res = await fetch("/api/aviones");
-      if (!res.ok) throw new Error(String(res.status));
-      const body = (await res.json()) as { planes: Wire[] };
-      failures = 0;
-      ingest(body.planes, clock());
-      const n = visibleCount(clock());
-      setState(n ? "live" : "quiet", n);
-    } catch {
-      // Un fallo suelto puede ser la red; dos seguidos, la antena no responde.
-      if (++failures >= 2 || state === "offline") {
-        planes.clear();
-        setState("offline");
-      }
-    } finally {
-      busy = false;
-      if (still) draw(performance.now());
-      schedule();
-    }
-  };
-  const schedule = () => {
-    if (!visible || document.hidden || timer !== undefined) return;
-    timer = window.setTimeout(poll, (state === "offline" ? POLL_OFFLINE : POLL) * 1000);
-  };
+  let historyApplied = false;
   const visibleCount = (T: number) => [...planes.values()].filter((pl) => alpha(pl, T) > 0.05).length;
 
-  const loadHistory = async () => {
-    const body = (await json("/api/estelas")) as { tracks?: Record<string, number[][]> } | null;
-    if (!body?.tracks) return;
-    history = body.tracks;
-    historyAt = clock();
-    for (const pl of planes.values()) merge(pl);
+  // El sondeo es único para toda la página (src/lib/live.ts); aquí solo se recibe.
+  const onFeed = (feed: Feed) => {
+    const ta = (feed.at - t0) / 1000;
+    if (feed.history && !historyApplied) {
+      historyApplied = true;
+      history = feed.history;
+      historyAt = ta;
+      for (const pl of planes.values()) merge(pl);
+    }
+    if (feed.offline) {
+      planes.clear();
+      setState("offline");
+    } else {
+      ingest(feed.planes, ta);
+      const n = visibleCount(clock());
+      setState(n ? "live" : "quiet", n);
+    }
+    if (still) draw(performance.now());
   };
 
   // ------------------------------------------------------------- interacción
@@ -245,14 +196,15 @@ export function mount(root: HTMLElement) {
     if (!card) return;
     card.hidden = !plane;
     if (!plane) return;
-    for (const name of ["route", "airline", "model", "reg"]) field(name)!.textContent = "…";
+    const names = ["route", "airline", "model", "reg"] as const;
+    for (const name of names) field(name)!.textContent = "…";
     field("callsign")!.textContent = plane.f ?? plane.h.toUpperCase();
     const img = field("photo") as HTMLImageElement;
     const credit = field("credit") as HTMLAnchorElement;
     img.hidden = credit.hidden = true;
-    lookup(plane).then((info) => {
+    lookup(plane.h, plane.f).then((info) => {
       if (picked !== plane) return;
-      for (const name of ["route", "airline", "model", "reg"]) field(name)!.textContent = info[name] ?? "—";
+      for (const name of names) field(name)!.textContent = info[name] ?? "—";
       field("route")!.hidden = !info.route; // sin ruta, un guion grande no aporta nada
       if (info.photo) {
         img.src = info.photo;
@@ -265,8 +217,9 @@ export function mount(root: HTMLElement) {
     });
   };
   card?.querySelector("[data-flight-close]")?.addEventListener("click", () => select(null));
-  addEventListener("keydown", (e) => e.key === "Escape" && select(null));
+  if (!mini) addEventListener("keydown", (e) => e.key === "Escape" && select(null));
 
+  if (!mini) {
   addEventListener("pointermove", (e) => {
     const px = mx;
     const py = my;
@@ -291,6 +244,7 @@ export function mount(root: HTMLElement) {
     if (still) draw(performance.now());
   });
   addEventListener("pointercancel", () => (drag = null));
+  }
 
   // ---------------------------------------------------------------- cámara
   let sinYaw = 0;
@@ -335,12 +289,14 @@ export function mount(root: HTMLElement) {
   let pitchP = 0;
   let hudAt = 0;
   let lastDraw = performance.now();
+  let shownAt = t0; // la entrada empieza al verse; en el mini, cuando llega a pantalla
+  let shown = false;
 
   const draw = (now: number) => {
     const dt = Math.min(0.1, (now - lastDraw) / 1000);
     lastDraw = now;
-    const el = (now - t0) / 1000;
-    const T = el;
+    const T = (now - t0) / 1000;
+    const el = (now - shownAt) / 1000;
     const ease = (s: number) => (still ? 1 : 1 - (1 - Math.min(1, el / s)) ** 3);
     const intro = ease(2.8);
     const grow = ease(1.8);
@@ -350,12 +306,12 @@ export function mount(root: HTMLElement) {
     yawP += ((follow ? (mx / w - 0.5) * 0.3 : 0) - yawP) * 0.04;
     pitchP += ((follow ? (my / h - 0.5) * -0.1 : 0) - pitchP) * 0.04;
     const yaw = 0.35 + (still ? 0 : Math.sin(el / 9) * 0.18) + yawP + yawUser;
-    const pitch = (PITCH + pitchP + pitchUser) * intro;
+    const pitch = ((mini ? PITCH_MINI : PITCH) + pitchP + pitchUser) * intro;
     sinYaw = Math.sin(yaw);
     cosYaw = Math.cos(yaw);
     sinPitch = Math.sin(pitch);
     cosPitch = Math.cos(pitch);
-    zk = ZX * intro;
+    zk = (mini ? ZX_MINI : ZX) * intro;
 
     ctx.clearRect(0, 0, w, h);
     ctx.lineWidth = 1;
@@ -377,18 +333,18 @@ export function mount(root: HTMLElement) {
       ctx.stroke();
     }
     for (let i = 1; i <= 4; i++) ring(((R * i) / 4) * grow, i === 4 ? 0.24 : 0.09);
-    if (!still && state !== "offline") {
+    if (!still && !mini && state !== "offline") {
       const q = (el % 5) / 5;
       ring(R * q, (1 - q) * 0.18);
     }
     const n = proj(0, -R * 1.09 * grow, 0);
     ctx.textAlign = "center";
-    ctx.globalAlpha = 0.5 * intro;
+    ctx.globalAlpha = (mini ? 0 : 0.5) * intro;
     ctx.fillText("N", n[0], n[1]);
 
     // Punto de referencia: el aeropuerto, con un avión visto desde arriba.
     const [ax, ay] = proj(data.airport.x, data.airport.y, 0);
-    const s = 4.5;
+    const s = mini ? 3 : 4.5;
     ctx.globalAlpha = 0.75 * grow;
     ctx.lineWidth = 1.4;
     ctx.lineJoin = ctx.lineCap = "round";
@@ -405,11 +361,13 @@ export function mount(root: HTMLElement) {
     ctx.lineWidth = 1;
     ctx.globalAlpha = 0.22 * grow;
     ctx.beginPath();
-    ctx.arc(ax, ay, 11, 0, 7);
+    ctx.arc(ax, ay, mini ? 8 : 11, 0, 7);
     ctx.stroke();
-    ctx.textAlign = "left";
-    ctx.globalAlpha = 0.7 * grow;
-    ctx.fillText(data.airport.code, ax + 17, ay);
+    if (!mini) {
+      ctx.textAlign = "left";
+      ctx.globalAlpha = 0.7 * grow;
+      ctx.fillText(data.airport.code, ax + 17, ay);
+    }
 
     heads = [];
     ctx.textAlign = "left";
@@ -457,13 +415,13 @@ export function mount(root: HTMLElement) {
 
       // El avión: el único color de la escena.
       ctx.fillStyle = ctx.shadowColor = amber;
-      ctx.shadowBlur = 12 + 6 * pl.hv;
-      dot(head, 2.6 + 1.4 * pl.hv, a0);
+      ctx.shadowBlur = (mini ? 9 : 12) + 6 * pl.hv;
+      dot(head, (mini ? 1.9 : 2.6) + 1.4 * pl.hv, a0);
       ctx.shadowBlur = 0;
       ctx.fillStyle = ink;
 
       // Indicativo: al aparecer o al tocarlo; se desliza un poco al entrar.
-      if (pl.f) {
+      if (pl.f && !mini) {
         const fresh = still ? 0 : Math.min(1, Math.max(0, 1 - (T - pl.born) / 8) * 3);
         const a1 = Math.max(fresh, pl.hv);
         if (a1 > 0.02) {
@@ -474,7 +432,7 @@ export function mount(root: HTMLElement) {
     }
     ctx.globalAlpha = 1;
 
-    stage.style.cursor = drag ? "grabbing" : nearest() ? "pointer" : "";
+    if (!mini) stage.style.cursor = drag ? "grabbing" : nearest() ? "pointer" : "";
     const chosen = picked && heads.find((hd) => hd.plane === picked);
     if (picked && !chosen) select(null); // se fue de escena
 
@@ -507,20 +465,20 @@ export function mount(root: HTMLElement) {
     if (still) draw(performance.now());
   }).observe(canvas);
 
-  // Fuera de pantalla o con la pestaña oculta no se dibuja ni se pregunta a la antena.
-  const resume = () => {
-    if (visible && !document.hidden && data.live) poll();
-  };
+  // Fuera de pantalla no se dibuja, y si nadie está a la vista no se pregunta a la antena.
   new IntersectionObserver(([e]) => {
     visible = e.isIntersecting;
-    if (visible) resume();
-    else select(null);
+    if (!visible) return select(null);
+    if (mini && !shown) {
+      shown = true;
+      shownAt = performance.now();
+    }
+    kick();
   }).observe(canvas);
-  document.addEventListener("visibilitychange", resume);
 
   if (data.live) {
     setState("connecting");
-    loadHistory().then(() => poll());
+    watch(onFeed, () => visible);
   }
   if (still) return;
   const loop = (now: number) => {

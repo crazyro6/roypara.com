@@ -2,6 +2,7 @@
 // Los textos traducibles van como { es, en }; el resto es igual en ambos idiomas.
 
 import type { T } from "@/i18n/ui";
+import rocketLeague from "@/assets/rocket-league.png";
 
 export const profile = {
   name: "Roy Para Olivera",
@@ -37,8 +38,8 @@ export const profile = {
         en: "Looking for an internship or my first job, in Gran Canaria or remote.",
       },
       {
-        es: "Conectando el radar a esta web para que enseñe los vuelos que capta mi antena.",
-        en: "Wiring the radar into this site so it shows the flights my antenna picks up.",
+        es: "Enseñando en esta web, en directo, lo que capta mi antena ADS-B.",
+        en: "Showing what my ADS-B antenna picks up, live, on this site.",
       },
     ] satisfies T[],
   },
@@ -78,6 +79,8 @@ export type Project = {
   image?: ImageMetadata;
   // Describe la foto; mientras no hay foto, en local sale como recordatorio.
   imageAlt: T;
+  // En vez de foto, un mini radar en directo con los aviones de mi antena.
+  miniRadar?: boolean;
 };
 
 export const projects: Project[] = [
@@ -89,9 +92,10 @@ export const projects: Project[] = [
       en: "Real-time dashboard fed by the game's local Stats API: live scoreboard, every player's rank and MMR, session history and an event feed. Installs as a PWA and starts with Windows.",
     },
     stack: ["React", "Vite", "Node.js", "PWA"],
+    image: rocketLeague,
     imageAlt: {
-      es: "El panel en un segundo monitor durante una partida: marcador, rangos y MMR de los seis jugadores",
-      en: "The dashboard on a second monitor mid-match: scoreboard, ranks and MMR for all six players",
+      es: "El panel durante una partida 3v3: marcador, los seis jugadores con su rango y MMR, estadísticas de la sesión y eventos de la partida",
+      en: "The dashboard during a 3v3 match: scoreboard, all six players with rank and MMR, session stats and the match event feed",
     },
     repo: "https://github.com/crazyro6/Rocket-League-Live-Dashboard",
   },
@@ -103,9 +107,10 @@ export const projects: Project[] = [
       en: "Front end for my own ADS-B receiver (Raspberry Pi + RTL-SDR). It reads dump1090's live feed and cross-references HexDB and Planespotters to show the registration, route and photo of every aircraft flying over the island.",
     },
     stack: ["React", "Vite", "CSS Grid", "Raspberry Pi"],
+    miniRadar: true,
     imageAlt: {
-      es: "La Raspberry Pi con el receptor RTL-SDR y la antena junto a la ventana",
-      en: "The Raspberry Pi with the RTL-SDR receiver and the antenna by the window",
+      es: "Mini radar en directo con los aviones que capta mi antena sobre Gran Canaria",
+      en: "Live mini radar showing the aircraft my antenna picks up over Gran Canaria",
     },
     repo: "https://github.com/crazyro6/Fronted-Feeder-FR24",
   },

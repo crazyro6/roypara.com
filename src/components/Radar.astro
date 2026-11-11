@@ -11,9 +11,16 @@ interface Props {
   class?: string;
   label?: string; // sin texto alternativo, el radar es decorativo
   live?: boolean; // false: solo el mapa, sin preguntar a la antena
+  mini?: boolean; // versión pequeña de una tarjeta: sin interacción ni etiquetas
 }
 
-const { lang, class: className, label, live = true } = Astro.props;
+const {
+  lang,
+  class: className,
+  label,
+  live = true,
+  mini = false,
+} = Astro.props;
 const { t } = useT(lang);
 
 // Los textos de estado los pone el script; {n} es el número de aviones.
@@ -26,8 +33,17 @@ const labels = {
 const data = { ...scene(), live, labels };
 ---
 
-<div class:list={["radar", className]} data-radar data-tz={profile.timeZone} data-locale={htmlLang[lang]}>
-  <canvas {...label ? { role: "img", "aria-label": label } : { "aria-hidden": "true" }}></canvas>
+<div
+  class:list={["radar", className]}
+  data-radar
+  data-mini={mini ? "" : undefined}
+  data-tz={profile.timeZone}
+  data-locale={htmlLang[lang]}
+>
+  <canvas
+    {...label
+      ? { role: "img", "aria-label": label }
+      : { "aria-hidden": "true" }}></canvas>
   <script is:inline type="application/json" set:html={JSON.stringify(data)} />
 </div>
 

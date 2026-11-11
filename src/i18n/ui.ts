@@ -69,6 +69,8 @@ export const ui = {
   more: { es: "Más", en: "More" },
 
   pathTitle: { es: "Trayectoria", en: "Background" },
+  boardTitle: { es: "Sobre mi antena ahora mismo", en: "Over my antenna right now" },
+  boardQuiet: { es: "Ahora mismo no hay aviones en el aire.", en: "No aircraft in the air right now." },
   nowTitle: { es: "Ahora", en: "Now" },
   nowUpdated: { es: "Actualizado en {date}", en: "Updated {date}" },
   photoPending: { es: "Foto pendiente", en: "Photo to come" },
