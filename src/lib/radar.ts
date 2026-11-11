@@ -22,6 +22,7 @@ const HOLD = 75; // segundos máximos de extrapolación sin lectura nueva
 const DIM = 15; // desde aquí empieza a atenuarse
 const STALE = 60; // a los 60 s va a medio brillo y empieza a desvanecerse
 const FADE = 15; // y en otros 15 s desaparece
+const GONE = 4; // un avión que la API ya no lista se desvanece en tantos segundos
 
 type XY = [number, number];
 type State = "connecting" | "live" | "quiet" | "offline";
@@ -31,6 +32,7 @@ type Plane = {
   p: number[][]; // lecturas: x, y, z (km), t (s desde que se abrió la página)
   v: XY; // km/s
   born: number;
+  gone: number | null; // desde cuándo la API ya no lo lista (null = sigue en la lista)
   hv: number; // 0..1: cuánto está "tocado" por el puntero; sube rápido y baja despacio
   ox: number; // corrección que se disuelve al llegar una lectura nueva
   oy: number;
@@ -112,12 +114,13 @@ export function mount(root: HTMLElement) {
       const fix = [a.x, a.y, a.z, ts];
       let pl = planes.get(a.h);
       if (!pl) {
-        pl = { h: a.h, f: a.f, p: [fix], v: a.v, born: ta, hv: 0, ox: 0, oy: 0, to: ta };
+        pl = { h: a.h, f: a.f, p: [fix], v: a.v, born: ta, gone: null, hv: 0, ox: 0, oy: 0, to: ta };
         planes.set(a.h, pl);
         merge(pl);
         continue;
       }
       pl.f ??= a.f;
+      pl.gone = null;
       pl.v = a.v;
       const last = pl.p.at(-1)!;
       // dump1090 repite la última posición hasta que llega otra: eso no es una lectura nueva.
@@ -130,7 +133,13 @@ export function mount(root: HTMLElement) {
       pl.to = ta;
     }
     // Los que ya no vienen se quedan hasta desvanecerse; después se olvidan.
-    for (const [hex, pl] of planes) if (!seen.has(hex) && ta - pl.p.at(-1)![3] > STALE + FADE) planes.delete(hex);
+    // La API manda: lo que ya no lista se va rápido; lo que sigue listado se queda,
+    // aunque su posición sea lenta (entonces solo se atenúa, ver fade()).
+    for (const [hex, pl] of planes) {
+      if (seen.has(hex)) continue;
+      pl.gone ??= ta;
+      if (ta - pl.gone > GONE) planes.delete(hex);
+    }
   };
 
   /** Posición dibujada: la prevista más una corrección que se disuelve en ~1 s. */
@@ -143,9 +152,10 @@ export function mount(root: HTMLElement) {
   /** Cuánto se ve según lo vieja que es su última posición: 1 (reciente) → 0,5 → 0 (perdido). */
   const fade = (pl: Plane, T: number) => {
     const age = T - pl.p.at(-1)![3];
-    if (age <= DIM) return 1;
-    if (age <= STALE) return 1 - (0.5 * (age - DIM)) / (STALE - DIM);
-    return 0.5 * Math.max(0, 1 - (age - STALE) / FADE);
+    const out = pl.gone === null ? 1 : Math.max(0, 1 - (T - pl.gone) / GONE);
+    if (age <= DIM) return out;
+    if (age <= STALE) return out * (1 - (0.5 * (age - DIM)) / (STALE - DIM));
+    return out * 0.5 * Math.max(0, 1 - (age - STALE) / FADE);
   };
   const entry = (pl: Plane, T: number) => (still ? 1 : Math.min(1, (T - pl.born) / 1.2));
 

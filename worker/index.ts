@@ -29,7 +29,7 @@ const reply = (body: unknown, status = 200) =>
     headers: {
       "content-type": "application/json; charset=utf-8",
       // Un fallo también se cachea 5 s, para no martillear una Pi caída.
-      "cache-control": `public, max-age=3, s-maxage=${TTL}`,
+      "cache-control": `public, max-age=0, s-maxage=${TTL}`, // el navegador siempre revalida; solo cachea el borde
     },
   });
 
