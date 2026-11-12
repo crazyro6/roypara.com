@@ -25,7 +25,7 @@ let triedAt = -Infinity;
 let timer: number | undefined;
 
 const json = (url: string) =>
-  fetch(url)
+  fetch(url, { cache: "no-store" }) // nunca la copia del navegador: también salta las de 4 h ya guardadas
     .then((r) => (r.ok ? r.json() : null))
     .catch(() => null);
 

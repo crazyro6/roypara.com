@@ -29,7 +29,7 @@ const reply = (body: unknown, status = 200) =>
     headers: {
       "content-type": "application/json; charset=utf-8",
       // Un fallo también se cachea 5 s, para no martillear una Pi caída.
-      "cache-control": `public, max-age=0, s-maxage=${TTL}`, // el navegador siempre revalida; solo cachea el borde
+      "cache-control": `public, s-maxage=${TTL}`, // para la caché del borde; al navegador le llega no-store (ver fresh)
     },
   });
 
@@ -47,12 +47,21 @@ function writeHistory(history: History, ctx: Ctx) {
   ctx.waitUntil(edge?.put(HISTORY, new Response(JSON.stringify(history), { headers: { "cache-control": "max-age=900" } })) ?? Promise.resolve());
 }
 
+// Al servir desde su caché, Cloudflare reescribe max-age con el «Browser Cache
+// TTL» de la zona (4 h): el navegador se quedaba con aviones viejos. Lo que
+// sale hacia el navegador lleva siempre no-store; s-maxage solo vive en el borde.
+function fresh(res: Response) {
+  const out = new Response(res.body, res);
+  out.headers.set("cache-control", "no-store");
+  return out;
+}
+
 async function cached(request: Request, ctx: Ctx, make: () => Promise<Response>) {
   const hit = await edge?.match(request);
-  if (hit) return hit;
+  if (hit) return fresh(hit);
   const res = await make();
   if (edge) ctx.waitUntil(edge.put(request, res.clone()));
-  return res;
+  return fresh(res);
 }
 
 async function planes(env: Env, ctx: Ctx) {
