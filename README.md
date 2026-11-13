@@ -20,9 +20,9 @@ La web es un [Astro](https://astro.build) estático con CSS sin frameworks, en e
 antena ADS-B → Raspberry Pi (readsb + tar1090) → Cloudflare Tunnel + Access → Worker (/api/*) → navegador
 ```
 
-- **La Pi** sirve `aircraft.json` y un túnel de Cloudflare (`cloudflared`) lo publica en `radar.roypara.com`. El túnel solo deja pasar esa ruta: el resto de la Pi, incluido `receiver.json`, que trae la posición exacta de la antena, da 404.
+- **La Pi** sirve el `aircraft.json` de tar1090 y un túnel de Cloudflare (`cloudflared`) lo publica en `radar.roypara.com`. El túnel solo deja pasar esa ruta (el resto, incluido `receiver.json`, con la posición exacta de la antena, da 404) y además está cerrado con Cloudflare Access: solo entra quien lleve el token del Worker. Es necesario porque el `aircraft.json` de tar1090 trae la distancia y dirección de cada avión a la antena, y con eso se saca dónde está.
 - **El Worker** (`worker/`) atiende solo `/api/*`; el resto de la web son archivos estáticos.
-  - `/api/aircraft.json`: los aviones ahora mismo, con el mismo formato y los mismos nombres que el `aircraft.json` de la Pi. Solo se quitan los campos que delatan dónde está la antena (`r_dst`, `r_dir`). Se cachea 5 s, así que la Pi recibe como mucho una petición cada 5 s por centro de datos.
+  - `/api/aircraft.json`: los aviones ahora mismo, con el mismo formato y los mismos nombres que el `aircraft.json` de la Pi. Solo se quitan los campos que delatan dónde está la antena (`r_dst`, `r_dir`, `rr_lat`, `rr_lon`); es una lista cerrada, así que un campo nuevo de tar1090 no sale hasta añadirlo en `worker/live.ts`. Se cachea 5 s, así que la Pi recibe como mucho una petición cada 5 s por centro de datos.
   - `/api/receiver.json`: la posición de la antena, pero solo aproximada (`src/data/radar.ts`).
   - `/api/estelas`: los últimos 10 minutos de recorrido, para que el radar no empiece vacío.
 - **En el navegador** hay un único sondeo compartido (`src/lib/live.ts`) del que se alimentan el radar de la portada, el mini radar y el panel de «Ahora». Cada avión se convierte a kilómetros alrededor del centro aproximado y, entre dos lecturas, se mueve por su rumbo y velocidad.
@@ -37,12 +37,19 @@ antena ADS-B → Raspberry Pi (readsb + tar1090) → Cloudflare Tunnel + Access 
    ```yaml
    ingress:
      - hostname: radar.roypara.com
-       path: ^/dump1090/data/aircraft\.json$
+       path: ^/adsbx/data/aircraft\.json$
        service: http://localhost:80
      - service: http_status:404
    ```
 
 3. Ejecutarlo como servicio (`cloudflared service install`).
+4. **Cerrarlo con Cloudflare Access** (Zero Trust, gratis). Antes de dejar el túnel público, o cualquiera podría leer la distancia a la antena:
+   - Access controls → Service credentials: crear un *Service Token* sin caducidad.
+   - En el Worker (Settings → Variables and Secrets), dos secretos: `ACCESS_ID` (Client ID) y `ACCESS_SECRET` (Client Secret).
+   - Access controls → Applications → Self-hosted, con `radar.roypara.com` y sin ruta; política con acción *Service Auth* e *Include: Service Token*.
+
+   Sin la clave, el túnel responde 403.
+5. Opcional, para que matrícula y modelo salgan de la Pi: bajar `aircraft.csv.gz` de [tar1090-db](https://github.com/wiedehopf/tar1090-db/tree/csv) y arrancar el decodificador con `--db-file <ruta> --db-file-lt`. No se actualiza solo.
 
 La ruta `/adsbx/data/aircraft.json` y el nombre del host están en `worker/index.ts`; si tu tar1090 sirve en otro sitio, cámbialos ahí y en la regla del túnel.
 
@@ -58,7 +65,7 @@ pnpm preview   # sirve dist/
 node worker/live.test.ts   # comprobaciones de la lógica del Worker
 ```
 
-En local, `/api/aviones` pide los datos al túnel real. Para probar con otra fuente (otra Pi, un simulador):
+En local, `/api/aircraft.json` pide los datos al túnel real, que está cerrado: hace falta la clave en el entorno (`ACCESS_ID` y `ACCESS_SECRET`). Sin ella, o para probar con otra fuente (la Pi en la red local, un simulador), se indica el origen, que va sin clave:
 
 ```bash
 RADAR_ORIGIN=http://<ip-de-la-pi> pnpm dev
