@@ -122,7 +122,7 @@ export function mount(root: HTMLElement) {
       pl.gone = null;
       pl.v = a.v;
       const last = pl.p.at(-1)!;
-      // dump1090 repite la última posición hasta que llega otra: eso no es una lectura nueva.
+      // readsb repite la última posición hasta que llega otra: eso no es una lectura nueva.
       if (ts <= last[3] || Math.hypot(a.x - last[0], a.y - last[1]) < 0.05) continue;
       const [cxp, cyp] = display(pl, ta); // dónde se veía hace un instante
       pl.p.push(fix);

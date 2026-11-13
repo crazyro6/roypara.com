@@ -25,8 +25,7 @@ const PUBLIC = (
   "hex type flight r t desc ownOp year alt_baro alt_geom gs ias tas mach wd ws oat tat track track_rate roll " +
   "mag_heading true_heading baro_rate geom_rate squawk emergency category nav_qnh nav_altitude_mcp " +
   "nav_altitude_fms nav_heading nav_modes lat lon nic rc seen_pos version nic_baro nac_p nac_v sil sil_type " +
-  "gva sda alert spi mlat tisb messages seen rssi " +
-  "altitude speed vert_rate" // shortcut: nombres del dump1090 antiguo, quitar cuando el túnel sirva tar1090
+  "gva sda alert spi mlat tisb messages seen rssi"
 ).split(" ");
 
 /** El aircraft.json de la Pi con la misma forma, sin los campos que no deben salir. */
@@ -44,7 +43,7 @@ export type Fix = [number, number, number, number];
 export type History = Record<string, Fix[]>;
 
 type Raw = Record<
-  "hex" | "flight" | "r" | "t" | "desc" | "ownOp" | "lat" | "lon" | "seen_pos" | "gs" | "track" | "alt_baro" | "alt_geom" | "speed" | "altitude",
+  "hex" | "flight" | "r" | "t" | "desc" | "ownOp" | "lat" | "lon" | "seen_pos" | "gs" | "track" | "alt_baro" | "alt_geom",
   unknown
 >;
 
@@ -69,9 +68,9 @@ export function normalize(raw: unknown, center: [number, number], range: number)
     const [x, y] = xy(center, a.lat, a.lon);
     if (Math.hypot(x, y) > range) continue;
 
-    const alt = [a.alt_baro, a.altitude, a.alt_geom].find((v) => v !== undefined);
+    const alt = [a.alt_baro, a.alt_geom].find((v) => v !== undefined);
     const z = num(alt) ? Math.max(0, alt) * FT : 0; // "ground" y desconocida: al suelo
-    const kt = num(a.gs) ? a.gs : num(a.speed) ? a.speed : 0;
+    const kt = num(a.gs) ? a.gs : 0;
     const speed = num(a.track) ? kt * KT : 0;
     const rad = ((num(a.track) ? a.track : 0) * Math.PI) / 180;
     const flight = typeof a.flight === "string" ? a.flight.trim().toUpperCase() : "";

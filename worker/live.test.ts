@@ -7,23 +7,22 @@ const raw = {
   aircraft: [
     // 0,1° al norte y 0,1° al este: unos 11 km al NE, a 35.000 pies, rumbo este.
     { hex: "4CA2D6", flight: "RYR5LG ", lat: 27.94, lon: -15.34, alt_baro: 35000, gs: 450, track: 90, seen_pos: 1.26 },
-    { hex: "3c743a", lat: 27.85, lon: -15.44, altitude: "ground", seen_pos: 2 }, // en tierra, sin indicativo
+    { hex: "3c743a", lat: 27.85, lon: -15.44, alt_baro: "ground", seen_pos: 2 }, // en tierra, sin indicativo
     { hex: "~abcdef", lat: 27.9, lon: -15.4 }, // no es un código ICAO
     { hex: "zzzzzz", lat: 27.9, lon: -15.4 }, // hex inválido
     { hex: "111111", lat: 40, lon: -3 }, // fuera de alcance
     { hex: "222222", lat: 27.9, lon: -15.4, seen_pos: 99 }, // posición vieja
     { hex: "555555", lat: 27.9, lon: -15.4, seen_pos: 65 }, // sin lectura hace más de un minuto: fuera
     { hex: "777777", lat: 27.9, lon: -15.4, seen_pos: 25 }, // 25 s sin posición es normal con una antena casera: se queda
-    { hex: "666666", lat: 27.9, lon: -15.4, speed: 450, track: 90 }, // dump1090 antiguo: speed en vez de gs
     { hex: "333333", flight: "<script>", lat: 27.9, lon: -15.4 }, // indicativo raro
     { hex: "444444" }, // sin posición
   ],
 };
 
 const planes = normalize(raw, center, 120);
-assert.deepEqual(planes.map((p) => p.hex), ["4ca2d6", "3c743a", "777777", "666666", "333333"]);
+assert.deepEqual(planes.map((p) => p.hex), ["4ca2d6", "3c743a", "777777", "333333"]);
 
-const [a, b, , d, c] = planes; // d: speed antiguo, c: indicativo raro
+const [a, b, , c] = planes; // c: indicativo raro
 assert.equal(a.flight, "RYR5LG");
 assert.ok(Math.abs(a.x - 9.8) < 0.2 && Math.abs(a.y + 11.1) < 0.2, `posición ${a.x},${a.y}`);
 assert.equal(a.z, 10.67); // 35.000 pies
@@ -33,7 +32,6 @@ assert.equal(b.z, 0);
 assert.equal(b.flight, undefined);
 assert.deepEqual(b.v, [0, 0]);
 assert.equal(c.flight, undefined);
-assert.ok(Math.abs(d.v[0] - 0.231) < 0.001 && d.v[1] === 0, `speed antiguo ${d.v}`);
 assert.deepEqual(normalize(null, center, 120), []);
 assert.deepEqual(normalize({ aircraft: "no" }, center, 120), []);
 

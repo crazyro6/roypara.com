@@ -20,7 +20,7 @@ interface Env {
 type Ctx = { waitUntil(promise: Promise<unknown>): void };
 
 const ORIGIN = "https://radar.roypara.com";
-const PATH = "/dump1090/data/aircraft.json";
+const PATH = "/adsbx/data/aircraft.json";
 const HISTORY = "https://radar.internal/history";
 const TTL = 5; // segundos
 

@@ -17,7 +17,7 @@ La web es un [Astro](https://astro.build) estático con CSS sin frameworks, en e
 ## Cómo funciona el radar en directo
 
 ```
-antena ADS-B → Raspberry Pi (dump1090) → Cloudflare Tunnel → Worker (/api/*) → navegador
+antena ADS-B → Raspberry Pi (readsb + tar1090) → Cloudflare Tunnel + Access → Worker (/api/*) → navegador
 ```
 
 - **La Pi** sirve `aircraft.json` y un túnel de Cloudflare (`cloudflared`) lo publica en `radar.roypara.com`. El túnel solo deja pasar esa ruta: el resto de la Pi, incluido `receiver.json`, que trae la posición exacta de la antena, da 404.
@@ -44,7 +44,7 @@ antena ADS-B → Raspberry Pi (dump1090) → Cloudflare Tunnel → Worker (/api/
 
 3. Ejecutarlo como servicio (`cloudflared service install`).
 
-La ruta `/dump1090/data/aircraft.json` y el nombre del host están en `worker/index.ts`; si tu dump1090 sirve en otro sitio, cámbialos ahí y en la regla del túnel.
+La ruta `/adsbx/data/aircraft.json` y el nombre del host están en `worker/index.ts`; si tu tar1090 sirve en otro sitio, cámbialos ahí y en la regla del túnel.
 
 ## Desarrollo
 
