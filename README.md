@@ -8,6 +8,7 @@ La web es un [Astro](https://astro.build) estático con CSS sin frameworks, en e
 
 - **Portada:** un cielo oscuro a pantalla completa con el radar. Los aviones aparecen a su altitud real, con estela y una línea hasta el suelo. Se gira arrastrando y, al pulsar un avión, se abre su ficha (foto, ruta, modelo, aerolínea, matrícula, altitud, velocidad y rumbo).
 - **Proyectos:** tarjetas con captura. La del Radar ADS-B lleva un mini radar en directo en lugar de una foto.
+- **Radar completo (`/radar/`):** el mapa 3D del proyecto [Radar ADS-B](https://github.com/crazyro6/Fronted-Feeder-FR24), con lista de aviones y fichas detalladas. Se enlaza desde su tarjeta y desde la portada. Es una app React compilada que lee la misma API (`/api/aircraft.json` y `/api/receiver.json`); vive en `public/radar/` y no se edita aquí: se cambia en su repo y se vuelve a compilar con `npm run publicar`.
 - **Ahora:** una banda con lo que hago ahora y un panel tipo aeropuerto con los tres aviones más cercanos a la antena.
 - **Trayectoria:** una ruta de vuelo que se dibuja al hacer scroll, con un avión y las etapas que se encienden al alcanzarlas.
 - **Contacto**, con la misma estética oscura que la portada.
@@ -83,6 +84,7 @@ RADAR_ORIGIN=http://<ip-de-la-pi> pnpm dev
 | Motor del radar (canvas) | `src/lib/radar.ts` |
 | Sondeo compartido, panel de vuelos, fichas | `src/lib/live.ts`, `src/lib/board.ts`, `src/lib/aircraft.ts` |
 | API en directo (Worker) | `worker/` |
+| Radar completo (compilado, no editar) | `public/radar/` |
 | Costas de las islas | `src/data/islands.json` |
 | Foto | `src/assets/roy.jpg` |
 | CV, favicon, imagen para redes (`og.png`) | `public/` |

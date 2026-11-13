@@ -103,16 +103,17 @@ export const projects: Project[] = [
     name: "Radar ADS-B",
     year: "2026",
     description: {
-      es: "Interfaz para mi propio receptor ADS-B (Raspberry Pi + RTL-SDR). Lee en vivo los datos de dump1090 y los cruza con HexDB y Planespotters para mostrar matrícula, ruta y foto de cada avión que pasa sobre la isla.",
-      en: "Front end for my own ADS-B receiver (Raspberry Pi + RTL-SDR). It reads dump1090's live feed and cross-references HexDB and Planespotters to show the registration, route and photo of every aircraft flying over the island.",
+      es: "Mapa 3D en directo de lo que capta mi receptor ADS-B (Raspberry Pi + RTL-SDR con readsb y tar1090). Cruza cada avión con HexDB y Planespotters para mostrar matrícula, ruta y foto.",
+      en: "Live 3D map of what my ADS-B receiver picks up (Raspberry Pi + RTL-SDR running readsb and tar1090). Each aircraft is cross-referenced with HexDB and Planespotters to show its registration, route and photo. Interface in Spanish.",
     },
-    stack: ["React", "Vite", "CSS Grid", "Raspberry Pi"],
+    stack: ["React", "Vite", "MapLibre", "deck.gl", "Raspberry Pi"],
     miniRadar: true,
     imageAlt: {
       es: "Mini radar en directo con los aviones que capta mi antena sobre Gran Canaria",
       en: "Live mini radar showing the aircraft my antenna picks up over Gran Canaria",
     },
     repo: "https://github.com/crazyro6/Fronted-Feeder-FR24",
+    demo: "/radar/", // compilado desde ese repo en public/radar/ (npm run publicar)
   },
 ];
 

@@ -28,6 +28,7 @@ export const ui = {
     es: "Arrastra para girar · pulsa un avión para ver su ficha",
     en: "Drag to rotate · tap an aircraft for details",
   },
+  radarFull: { es: "Ver el radar completo", en: "Open the full radar (in Spanish)" },
   flightCard: { es: "Avión seleccionado", en: "Selected aircraft" },
   flightAirline: { es: "Aerolínea", en: "Airline" },
   flightModel: { es: "Modelo", en: "Aircraft" },
