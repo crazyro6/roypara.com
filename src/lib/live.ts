@@ -1,8 +1,11 @@
-// Un único sondeo a /api/aviones para toda la página: el radar de la portada,
+// Un único sondeo a /api/aircraft.json para toda la página: el radar de la portada,
 // el mini radar de la tarjeta y el panel de «Ahora» se suscriben y reparten el
 // mismo resultado. Así cada visitante cuesta una consulta cada 5 s, no tres.
 
-export type Wire = { h: string; f?: string; x: number; y: number; z: number; s: number; v: [number, number] };
+import { normalize, type Plane } from "../../worker/live";
+import { radar } from "../data/radar";
+
+export type Wire = Plane;
 
 export type Feed = {
   planes: Wire[]; // última lectura, en km alrededor del centro del radar
@@ -42,10 +45,10 @@ async function poll() {
       historyAsked = true;
       history = (await json("/api/estelas"))?.tracks ?? null;
     }
-    const body = await json("/api/aviones");
-    if (!Array.isArray(body?.planes)) throw new Error("sin datos");
+    const body = await json("/api/aircraft.json");
+    if (!Array.isArray(body?.aircraft)) throw new Error("sin datos");
     failures = 0;
-    feed = { planes: body.planes, offline: false, at: performance.now(), history };
+    feed = { planes: normalize(body, radar.center, radar.range), offline: false, at: performance.now(), history };
     subs.forEach((s) => s.cb(feed!));
   } catch {
     // Un fallo suelto puede ser la red; dos seguidos, la antena no responde.

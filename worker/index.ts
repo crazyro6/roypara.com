@@ -1,18 +1,21 @@
 // Worker de Cloudflare: la web es estática y este código solo atiende /api/*.
 //
-//   /api/aviones  los aviones que capta mi antena ahora mismo
-//   /api/estelas  sus últimos 10 minutos, para que la página no empiece vacía
+//   /api/aircraft.json  los aviones que capta mi antena, con el formato de tar1090
+//   /api/receiver.json  dónde está la antena, pero solo de forma aproximada
+//   /api/estelas        sus últimos 10 minutos, para que la página no empiece vacía
 //
 // Los datos salen de la Raspberry Pi por un túnel de Cloudflare que solo
 // deja pasar aircraft.json (nunca receiver.json, que trae la posición
 // exacta). Aquí se cachean 5 s, así que da igual cuánta gente mire la web:
 // la Pi recibe como mucho una petición cada 5 s por centro de datos.
 import { radar } from "../src/data/radar.ts";
-import { normalize, trails, updateHistory, type History } from "./live.ts";
+import { normalize, publicFeed, trails, updateHistory, type History } from "./live.ts";
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
   RADAR_ORIGIN?: string; // solo para pruebas en local
+  ACCESS_ID?: string; // clave de Cloudflare Access: sin ella el túnel no deja entrar a nadie
+  ACCESS_SECRET?: string;
 }
 type Ctx = { waitUntil(promise: Promise<unknown>): void };
 
@@ -64,19 +67,23 @@ async function cached(request: Request, ctx: Ctx, make: () => Promise<Response>)
   return fresh(res);
 }
 
-async function planes(env: Env, ctx: Ctx) {
+async function aircraft(env: Env, ctx: Ctx) {
   let raw: unknown;
   try {
-    const res = await fetch((env.RADAR_ORIGIN ?? ORIGIN) + PATH, { signal: AbortSignal.timeout(4000) });
+    // La clave solo viaja a mi túnel, nunca a un origen de pruebas.
+    const key = !env.RADAR_ORIGIN && env.ACCESS_ID && env.ACCESS_SECRET;
+    const res = await fetch((env.RADAR_ORIGIN ?? ORIGIN) + PATH, {
+      signal: AbortSignal.timeout(4000),
+      headers: key ? { "cf-access-client-id": env.ACCESS_ID!, "cf-access-client-secret": env.ACCESS_SECRET! } : {},
+    });
     if (!res.ok) throw new Error(String(res.status));
     raw = await res.json();
   } catch {
     return reply({ error: "offline" }, 503);
   }
-  const now = Date.now() / 1000;
   const list = normalize(raw, radar.center, radar.range);
-  writeHistory(updateHistory(await readHistory(), list, now), ctx);
-  return reply({ planes: list });
+  writeHistory(updateHistory(await readHistory(), list, Date.now() / 1000), ctx);
+  return reply(publicFeed(raw));
 }
 
 export default {
@@ -85,7 +92,9 @@ export default {
     if (!pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
     if (request.method !== "GET" && request.method !== "HEAD") return reply({ error: "method" }, 405);
 
-    if (pathname === "/api/aviones") return cached(request, ctx, () => planes(env, ctx));
+    if (pathname === "/api/aircraft.json") return cached(request, ctx, () => aircraft(env, ctx));
+    // Como el receiver.json de tar1090, pero con el centro aproximado del radar.
+    if (pathname === "/api/receiver.json") return fresh(reply({ lat: radar.center[0], lon: radar.center[1], refresh: TTL * 1000 }));
     if (pathname === "/api/estelas") {
       return cached(request, ctx, async () => reply({ tracks: trails(await readHistory(), Date.now() / 1000) }));
     }

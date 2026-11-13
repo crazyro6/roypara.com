@@ -22,11 +22,12 @@ antena ADS-B → Raspberry Pi (dump1090) → Cloudflare Tunnel → Worker (/api/
 
 - **La Pi** sirve `aircraft.json` y un túnel de Cloudflare (`cloudflared`) lo publica en `radar.roypara.com`. El túnel solo deja pasar esa ruta: el resto de la Pi, incluido `receiver.json`, que trae la posición exacta de la antena, da 404.
 - **El Worker** (`worker/`) atiende solo `/api/*`; el resto de la web son archivos estáticos.
-  - `/api/aviones`: los aviones ahora mismo, ya convertidos a kilómetros alrededor de un centro aproximado (`src/data/radar.ts`). Se cachea 5 s, así que la Pi recibe como mucho una petición cada 5 s por centro de datos.
+  - `/api/aircraft.json`: los aviones ahora mismo, con el mismo formato y los mismos nombres que el `aircraft.json` de la Pi. Solo se quitan los campos que delatan dónde está la antena (`r_dst`, `r_dir`). Se cachea 5 s, así que la Pi recibe como mucho una petición cada 5 s por centro de datos.
+  - `/api/receiver.json`: la posición de la antena, pero solo aproximada (`src/data/radar.ts`).
   - `/api/estelas`: los últimos 10 minutos de recorrido, para que el radar no empiece vacío.
-- **En el navegador** hay un único sondeo compartido (`src/lib/live.ts`) del que se alimentan el radar de la portada, el mini radar y el panel de «Ahora». Entre dos lecturas, los aviones se mueven por su rumbo y velocidad.
+- **En el navegador** hay un único sondeo compartido (`src/lib/live.ts`) del que se alimentan el radar de la portada, el mini radar y el panel de «Ahora». Cada avión se convierte a kilómetros alrededor del centro aproximado y, entre dos lecturas, se mueve por su rumbo y velocidad.
 - **Si la antena no responde**, el radar queda vacío con un aviso. No hay grabación de respaldo.
-- **Fichas:** foto de [Planespotters](https://www.planespotters.net) y datos de [HexDB](https://hexdb.io). Las costas son de [Natural Earth](https://www.naturalearthdata.com) (dominio público).
+- **Fichas:** foto de [Planespotters](https://www.planespotters.net); aerolínea y ruta de [HexDB](https://hexdb.io); matrícula y modelo, de la Pi si tiene la base de datos de aviones y, si no, de HexDB. Las costas son de [Natural Earth](https://www.naturalearthdata.com) (dominio público).
 
 ### Montar la parte de la Pi
 

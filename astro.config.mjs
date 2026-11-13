@@ -12,7 +12,7 @@ function radarApi() {
         if (!req.url?.startsWith("/api/")) return next();
         const worker = (await server.ssrLoadModule("/worker/index.ts")).default;
         const env = {
-          RADAR_ORIGIN: process.env.RADAR_ORIGIN,
+          ...process.env, // RADAR_ORIGIN, o ACCESS_ID y ACCESS_SECRET para leer del túnel real
           ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) },
         };
         const out = await worker.fetch(new Request(new URL(req.url, "http://localhost"), { method: req.method }), env, { waitUntil() {} });

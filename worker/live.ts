@@ -1,35 +1,52 @@
-// Lógica pura del radar en directo: del aircraft.json de dump1090 a lo que
-// necesita la página, y el historial de estelas. Sin nada del entorno.
+// Lógica pura del radar en directo, sin nada del entorno: qué campos del
+// aircraft.json de la Pi (tar1090) salen a internet, cómo se convierte cada
+// avión en lo que dibuja la página, y el historial de estelas.
 import { round, xy } from "../src/lib/geo.ts";
 
-/** Lo que recibe la página de cada avión, en km alrededor del centro del radar. */
+/** Un avión listo para dibujar: nombres de tar1090 más su sitio en km alrededor del centro del radar. */
 export type Plane = {
-  h: string; // código hex (público: lo emite el propio avión)
-  f?: string; // indicativo
+  hex: string; // código ICAO (público: lo emite el propio avión)
+  flight?: string; // indicativo
+  r?: string; // matrícula, tipo, modelo y operador: solo si la Pi tiene la base de datos de aviones
+  t?: string;
+  desc?: string;
+  ownOp?: string;
   x: number; // este
   y: number; // sur
   z: number; // altitud
-  s: number; // segundos desde la última posición
+  seen_pos: number; // segundos desde la última posición
   v: [number, number]; // velocidad en km/s (este, sur)
 };
+
+// Campos de tar1090 que salen a internet, con su nombre y valor tal cual. Lista
+// cerrada a propósito: r_dst y r_dir (distancia y dirección a la antena) y
+// rr_lat/rr_lon delatan dónde está mi casa y no pueden pasar nunca.
+const PUBLIC = (
+  "hex type flight r t desc ownOp year alt_baro alt_geom gs ias tas mach wd ws oat tat track track_rate roll " +
+  "mag_heading true_heading baro_rate geom_rate squawk emergency category nav_qnh nav_altitude_mcp " +
+  "nav_altitude_fms nav_heading nav_modes lat lon nic rc seen_pos version nic_baro nac_p nac_v sil sil_type " +
+  "gva sda alert spi mlat tisb messages seen rssi " +
+  "altitude speed vert_rate" // shortcut: nombres del dump1090 antiguo, quitar cuando el túnel sirva tar1090
+).split(" ");
+
+/** El aircraft.json de la Pi con la misma forma, sin los campos que no deben salir. */
+export function publicFeed(raw: unknown) {
+  const feed = raw as { now?: unknown; messages?: unknown; aircraft?: unknown } | null;
+  const list: unknown[] = Array.isArray(feed?.aircraft) ? feed.aircraft : [];
+  const aircraft = list
+    .filter((a): a is Record<string, unknown> => typeof a === "object" && a !== null)
+    .map((a) => Object.fromEntries(PUBLIC.filter((k) => a[k] !== undefined).map((k) => [k, a[k]])));
+  return { now: feed?.now, messages: feed?.messages, aircraft };
+}
 
 /** Una posición del historial: x, y, z en km y t en segundos (epoch). */
 export type Fix = [number, number, number, number];
 export type History = Record<string, Fix[]>;
 
-type Raw = {
-  hex?: unknown;
-  flight?: unknown;
-  lat?: unknown;
-  lon?: unknown;
-  seen_pos?: unknown;
-  gs?: unknown; // nudos (dump1090-fa)
-  speed?: unknown; // nudos (dump1090 antiguo, el de mi Pi)
-  track?: unknown;
-  alt_baro?: unknown;
-  altitude?: unknown;
-  alt_geom?: unknown;
-};
+type Raw = Record<
+  "hex" | "flight" | "r" | "t" | "desc" | "ownOp" | "lat" | "lon" | "seen_pos" | "gs" | "track" | "alt_baro" | "alt_geom" | "speed" | "altitude",
+  unknown
+>;
 
 const KT = 0.000514444; // km/s por nudo
 const FT = 0.0003048; // km por pie
@@ -37,7 +54,9 @@ const KEEP = 600; // segundos de historial
 const MIN_STEP = 1.5; // km mínimos entre dos puntos del historial
 
 const num = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+const text = (v: unknown) => (typeof v === "string" && v.trim()) || undefined;
 
+/** Los aviones con posición reciente y dentro del alcance, listos para dibujar. */
 export function normalize(raw: unknown, center: [number, number], range: number): Plane[] {
   const list = (raw as { aircraft?: Raw[] } | null)?.aircraft;
   const out: Plane[] = [];
@@ -58,12 +77,16 @@ export function normalize(raw: unknown, center: [number, number], range: number)
     const flight = typeof a.flight === "string" ? a.flight.trim().toUpperCase() : "";
 
     out.push({
-      h: a.hex.toLowerCase(),
-      f: /^[A-Z0-9]{2,8}$/.test(flight) ? flight : undefined,
+      hex: a.hex.toLowerCase(),
+      flight: /^[A-Z0-9]{2,8}$/.test(flight) ? flight : undefined,
+      r: text(a.r),
+      t: text(a.t),
+      desc: text(a.desc),
+      ownOp: text(a.ownOp),
       x: round(x, 1),
       y: round(y, 1),
       z: round(z, 2),
-      s: round(s, 1),
+      seen_pos: round(s, 1),
       v: [round(Math.sin(rad) * speed, 3) || 0, round(-Math.cos(rad) * speed, 3) || 0], // || 0 evita el -0
     });
   }
@@ -78,8 +101,8 @@ export function updateHistory(history: History, planes: Plane[], now: number): H
     if (kept.length) out[hex] = kept;
   }
   for (const p of planes) {
-    const t = Math.round(now - p.s);
-    const pts = (out[p.h] ??= []);
+    const t = Math.round(now - p.seen_pos);
+    const pts = (out[p.hex] ??= []);
     const last = pts.at(-1);
     if (last && (t <= last[3] || Math.hypot(p.x - last[0], p.y - last[1]) < MIN_STEP)) continue;
     pts.push([p.x, p.y, p.z, t]);

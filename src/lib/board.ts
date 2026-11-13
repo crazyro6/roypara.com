@@ -62,13 +62,13 @@ export function mount(root: HTMLElement) {
   };
 
   const fill = (row: HTMLElement, p: Wire) => {
-    row.dataset.h = p.h;
+    row.dataset.h = p.hex;
     row.removeAttribute("data-empty");
-    flip(cell(row, "cs"), p.f ?? p.h.toUpperCase(), still);
+    flip(cell(row, "cs"), p.flight ?? p.hex.toUpperCase(), still);
     flip(cell(row, "alt"), `${(Math.round(p.z * 10) * 100).toLocaleString(locale)} m`, still);
-    if (!p.f) return flip(cell(row, "rt"), "—", still);
-    routeOf(p.f).then((route) => {
-      if (row.dataset.h === p.h) flip(cell(row, "rt"), route ?? "—", still);
+    if (!p.flight) return flip(cell(row, "rt"), "—", still);
+    routeOf(p.flight).then((route) => {
+      if (row.dataset.h === p.hex) flip(cell(row, "rt"), route ?? "—", still);
     });
   };
 
@@ -82,15 +82,15 @@ export function mount(root: HTMLElement) {
       return show("quiet", labels.quiet);
     }
     const byDist = [...feed.planes].sort((a, b) => Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y));
-    const near = new Set(byDist.slice(0, ROWS + 1).map((p) => p.h)); // un puesto de margen
+    const near = new Set(byDist.slice(0, ROWS + 1).map((p) => p.hex)); // un puesto de margen
     for (let i = 0; i < ROWS; i++) if (slots[i] && !near.has(slots[i]!)) slots[i] = null;
     for (const p of byDist) {
       const free = slots.indexOf(null);
       if (free < 0) break;
-      if (!slots.includes(p.h)) slots[free] = p.h;
+      if (!slots.includes(p.hex)) slots[free] = p.hex;
     }
     rows.forEach((row, i) => {
-      const p = feed.planes.find((q) => q.h === slots[i]);
+      const p = feed.planes.find((q) => q.hex === slots[i]);
       if (!p) {
         row.dataset.empty = "";
         delete row.dataset.h;

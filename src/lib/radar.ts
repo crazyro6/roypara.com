@@ -27,8 +27,7 @@ const GONE = 4; // un avión que la API ya no lista se desvanece en tantos segun
 type XY = [number, number];
 type State = "connecting" | "live" | "quiet" | "offline";
 type Plane = {
-  h: string;
-  f?: string;
+  a: Wire; // la última lectura (con el indicativo, aunque esta ya no lo traiga)
   p: number[][]; // lecturas: x, y, z (km), t (s desde que se abrió la página)
   v: XY; // km/s
   born: number;
@@ -97,29 +96,29 @@ export function mount(root: HTMLElement) {
   };
 
   const merge = (pl: Plane) => {
-    const old = history[pl.h];
+    const old = history[pl.a.hex];
     if (!old) return;
     const first = pl.p[0][3];
     const earlier = old.map(([x, y, z, age]) => [x, y, z, historyAt - age]).filter((q) => q[3] < first);
     pl.p = [...earlier, ...pl.p];
-    delete history[pl.h];
+    delete history[pl.a.hex];
   };
   let historyAt = 0;
 
   const ingest = (list: Wire[], ta: number) => {
     const seen = new Set<string>();
     for (const a of list) {
-      seen.add(a.h);
-      const ts = ta - a.s;
+      seen.add(a.hex);
+      const ts = ta - a.seen_pos;
       const fix = [a.x, a.y, a.z, ts];
-      let pl = planes.get(a.h);
+      let pl = planes.get(a.hex);
       if (!pl) {
-        pl = { h: a.h, f: a.f, p: [fix], v: a.v, born: ta, gone: null, hv: 0, ox: 0, oy: 0, to: ta };
-        planes.set(a.h, pl);
+        pl = { a, p: [fix], v: a.v, born: ta, gone: null, hv: 0, ox: 0, oy: 0, to: ta };
+        planes.set(a.hex, pl);
         merge(pl);
         continue;
       }
-      pl.f ??= a.f;
+      pl.a = a.flight ? a : { ...a, flight: pl.a.flight };
       pl.gone = null;
       pl.v = a.v;
       const last = pl.p.at(-1)!;
@@ -214,11 +213,11 @@ export function mount(root: HTMLElement) {
     if (!plane) return;
     const names = ["route", "airline", "model", "reg"] as const;
     for (const name of names) field(name)!.textContent = "…";
-    field("callsign")!.textContent = plane.f ?? plane.h.toUpperCase();
+    field("callsign")!.textContent = plane.a.flight ?? plane.a.hex.toUpperCase();
     const img = field("photo") as HTMLImageElement;
     const credit = field("credit") as HTMLAnchorElement;
     img.hidden = credit.hidden = true;
-    lookup(plane.h, plane.f).then((info) => {
+    lookup(plane.a).then((info) => {
       if (picked !== plane) return;
       for (const name of names) field(name)!.textContent = info[name] ?? "—";
       field("route")!.hidden = !info.route; // sin ruta, un guion grande no aporta nada
@@ -441,12 +440,12 @@ export function mount(root: HTMLElement) {
       ctx.fillStyle = ink;
 
       // Indicativo: al aparecer o al tocarlo; se desliza un poco al entrar.
-      if (pl.f && !mini) {
+      if (pl.a.flight && !mini) {
         const fresh = still ? 0 : Math.min(1, Math.max(0, 1 - (T - pl.born) / 8) * 3);
         const a1 = Math.max(fresh, pl.hv);
         if (a1 > 0.02) {
           ctx.globalAlpha = a0 * a1 * 0.85;
-          ctx.fillText(pl.f, head[0] + 8 + 6 * a1, head[1] - 9);
+          ctx.fillText(pl.a.flight, head[0] + 8 + 6 * a1, head[1] - 9);
         }
       }
     }
@@ -510,8 +509,8 @@ export function mount(root: HTMLElement) {
 if (import.meta.env.DEV) {
   const x = predict([0, 0, 0, 0], [0.1, -0.2], 5);
   console.assert(x[0] === 0.5 && x[1] === -1, "radar: predict()");
-  const y = predict([0, 0, 0, 0], [0.1, 0], 60); // se corta en HOLD
-  console.assert(y[0] === 0.1 * 15 && predict([1, 1, 0, 9], [1, 1], 3)[0] === 1, "radar: predict() HOLD / pasado");
+  const y = predict([0, 0, 0, 0], [0.1, 0], HOLD * 2); // se corta en HOLD
+  console.assert(y[0] === 0.1 * HOLD && predict([1, 1, 0, 9], [1, 1], 3)[0] === 1, "radar: predict() HOLD / pasado");
   // Al apartar el ratón baja de forma gradual (1 → 0,37 → 0,14), nunca de golpe ni por debajo de 0.
   const a = hover(1, 0, 0.2);
   const b = hover(a, 0, 0.2);
